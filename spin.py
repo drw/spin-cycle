@@ -18,7 +18,8 @@
 # > spin add pi
 
 
-import requests, textwrap
+import sys, requests, textwrap
+import fire
 
 from datetime import datetime, timedelta
 from pprint import pprint
@@ -31,7 +32,6 @@ def print_table(ps):
     print(fmt.format("", "", "", "", "Period"))
     print(fmt.format("Code","Description","Cycles late", "Last spun","in days"))
     print("=========================================================================")
-    #fmt = "{:<33.33} {:<20.3f} {:<10.10} {:<12.12}"
     fmt = template.format("{:>16.3f}")
     for p in ps:
         last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
@@ -46,43 +46,46 @@ def print_table(ps):
 #with open(PATH+"/plates.json",'w') as f:
 #    f.write(dumps(plates, indent=4))
 
-with open(PATH+"/plates.json",'r') as f:
-#    pprint(f.read())
-    plates = loads(f.read())
+def load():
+    with open(PATH+"/plates.json",'r') as f:
+    #    pprint(f.read())
+        plates = loads(f.read())
+    return plates
 
-period = {'Annually': timedelta(days = 366),
-        'Bi-Annually': timedelta(days = 183),
-        'Quarterly': timedelta(days = 31+30+31),
-        'Monthly': timedelta(days = 31),
-        'Bi-Monthly': timedelta(days = 16),
-        'Weekly': timedelta(days = 7),
-        'Bi-Weekly': timedelta(days = 4),
-        'Daily': timedelta(days = 1),
-        'Hourly': timedelta(hours = 1),
-        'Multiple Times per Hour': timedelta(minutes=30)}
+def inspect(plates):
+    wobbly_plates = []
+    for i,plate in enumerate(plates):
+        last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
+        period_in_days = timedelta(days = plate['period_in_days']) 
+        if last_spun + period_in_days < datetime.now():
+            print("{} is overdue.".format(plate["code"]))
+            wobbler = dict(plate)
+            wobbler['last_spun_dt'] = last_spun
+            lateness = datetime.now() - (last_spun + period_in_days)
+            wobbler['cycles_late'] = lateness.total_seconds()/period_in_days.total_seconds()
+            wobbly_plates.append(wobbler)
+    return wobbly_plates
 
-wobbly_plates = []
-for i,plate in enumerate(plates):
-    last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
-    period_in_days = timedelta(days = plate['period_in_days']) 
-    if last_spun + period_in_days < datetime.now():
-        print("{} is overdue.".format(plate["code"]))
-        wobbler = dict(plate)
-        wobbler['last_spun_dt'] = last_spun
-        lateness = datetime.now() - (last_spun + period_in_days)
-        wobbler['cycles_late'] = lateness.total_seconds()/period_in_days.total_seconds()
-        wobbly_plates.append(wobbler)
+def check():
+    plates = load()
+    wobbly_plates = inspect(plates)
 
-wobbly_ps_sorted = sorted(wobbly_plates, 
-                        key=lambda u: -u['cycles_late'])
-print("\nPlates by Wobbliness: ")
-print_table(wobbly_ps_sorted)
+    wobbly_ps_sorted = sorted(wobbly_plates, 
+                            key=lambda u: -u['cycles_late'])
+    print("\nPlates by Wobbliness: ")
+    print_table(wobbly_ps_sorted)
 
-wobbly_ps_by_recency = sorted(wobbly_plates, 
-                        key=lambda u: u['last_spun'])
-print("\n\nWobbly Plates by Date of Last Spinning: ")
-print_table(wobbly_ps_by_recency)
+    wobbly_ps_by_recency = sorted(wobbly_plates, 
+                            key=lambda u: u['last_spun'])
+    print("\n\nWobbly Plates by Date of Last Spinning: ")
+    print_table(wobbly_ps_by_recency)
 
 
-coda = "Out of {} plates, {} need to be spun.".format(len(plates),len(wobbly_plates))
-print(textwrap.fill(coda,70))
+    coda = "Out of {} plates, {} need to be spun.".format(len(plates),len(wobbly_plates))
+    print(textwrap.fill(coda,70))
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        check() # Make this the default.
+    else:
+        fire.Fire()
