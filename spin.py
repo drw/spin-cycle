@@ -27,14 +27,17 @@ from json import loads, dumps
 from parameters.local_parameters import PATH
 
 def print_table(ps):
-    template = "{{:<10.10}}  {{:<20.20}}  {}  {{:<10.10}}  {{:<12}}"
-    fmt = template.format("{:>16.20}")
-    print(fmt.format("", "", "", "", "Period"))
-    print(fmt.format("Code","Description","Cycles late", "Last spun","in days"))
+    template = "{{:<10.10}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<12}}"
+    fmt = template.format("{:>7.9}")
+    print(fmt.format("", "", "Cycles", "", "Period"))
+    print(fmt.format("Code","Description","late", "Last spun","in days"))
     print("=========================================================================")
-    fmt = template.format("{:>16.3f}")
+    fmt = template.format("{:>7.1f}")
     for p in ps:
-        last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
+        if p['last_spun_dt'] is None:
+            last_spun_date = None
+        else:
+            last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
         print(fmt.format(p['code'],p['description'],
             p['cycles_late'], last_spun_date,
             p['period_in_days']))
@@ -52,17 +55,27 @@ def load():
         plates = loads(f.read())
     return plates
 
+def store(plates):
+    with open(PATH+"/plates.json",'w') as f:
+        f.write(dumps(plates, indent=4))
+
 def inspect(plates):
     wobbly_plates = []
     for i,plate in enumerate(plates):
-        last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
+        if plate['last_spun'] is None:
+            last_spun = None
+        else:
+            last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
         period_in_days = timedelta(days = plate['period_in_days']) 
-        if last_spun + period_in_days < datetime.now():
+        if last_spun is None or  last_spun + period_in_days < datetime.now():
             print("{} is overdue.".format(plate["code"]))
             wobbler = dict(plate)
             wobbler['last_spun_dt'] = last_spun
-            lateness = datetime.now() - (last_spun + period_in_days)
-            wobbler['cycles_late'] = lateness.total_seconds()/period_in_days.total_seconds()
+            if last_spun is None:
+                wobbler['cycles_late'] = 0
+            else:
+                lateness = datetime.now() - (last_spun + period_in_days)
+                wobbler['cycles_late'] = lateness.total_seconds()/period_in_days.total_seconds()
             wobbly_plates.append(wobbler)
     return wobbly_plates
 
@@ -83,6 +96,36 @@ def check():
 
     coda = "Out of {} plates, {} need to be spun.".format(len(plates),len(wobbly_plates))
     print(textwrap.fill(coda,70))
+
+def prompt_for(input_field):
+    try:
+        text = raw_input(input_field+": ")  # Python 2
+    except:
+        text = input(input_field+": ")  # Python 3
+    return text
+
+def add(code=None):
+    plates = load()
+    d = {'code': code}
+    if code is None:
+        d['code'] = prompt_for('Code')
+    if d['code'] in [p['code'] for p in plates]:
+        print("There's already a plate under that code. Try \n     > spin edit {}".format(d['code']))
+        return
+
+    d['description'] = prompt_for('Description')
+    d['period_in_days'] = int(prompt_for('Period in days'))
+    last_spun = prompt_for("Last spun [YYYY-MM-DD | Enter for now | 'None' for never]")
+    if last_spun == 'None':
+        d['last_spun'] = None
+    elif last_spun == '':
+        d['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+    else:
+        d['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
+    plates.append(d)
+    store(plates)
+    print('"{}" was added to the plates being tracked.'.format(d['description']))
+    check()
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
