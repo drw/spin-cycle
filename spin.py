@@ -127,6 +127,45 @@ def add(code=None):
     print('"{}" was added to the plates being tracked.'.format(d['description']))
     check()
 
+def prompt_to_edit_field(d, base_prompt, field):
+    new_value = prompt_for('{} ({})'.format(base_prompt, d[field]))
+    if new_value == '':
+        return d[field]
+    else:
+        return new_value
+
+def edit(code=None):
+    plates = load()
+    if code is None:
+        print("You have to specify the code of an existing plate to edit.")
+        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+        code = prompt_for('Enter the code')
+    codes = [p['code'] for p in plates]
+    while code not in codes:
+        print("There's no plate under that code. Try again.")
+        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+        code = prompt_for('Enter the code of the plate you want to edit')
+
+    index = codes.index(code)
+    p = plates[index]
+    p['description'] = prompt_to_edit_field(p,'Description','description')
+    p['period_in_days'] = int(prompt_to_edit_field(p,'Period in days','period_in_days'))
+
+    base_prompt = "Last spun [YYYY-MM-DD | 'now' | 'None' for never]"
+    field = 'last_spun'
+    last_spun = prompt_for('{} ({})'.format(base_prompt, p[field]))
+    if last_spun != '':
+        if last_spun == 'None':
+            p['last_spun'] = None
+        elif last_spun == 'now':
+            p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+        else:
+            p['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
+    # plates has now been updated since p points to the corresponding element in plates.
+    store(plates)
+    print('"{}" has been edited.'.format(p['description']))
+    check()
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         check() # Make this the default.
