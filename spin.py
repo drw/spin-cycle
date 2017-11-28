@@ -114,7 +114,7 @@ def add(code=None):
         return
 
     d['description'] = prompt_for('Description')
-    d['period_in_days'] = int(prompt_for('Period in days'))
+    d['period_in_days'] = float(prompt_for('Period in days'))
     last_spun = prompt_for("Last spun [YYYY-MM-DD | Enter for now | 'None' for never]")
     if last_spun == 'None':
         d['last_spun'] = None
@@ -149,7 +149,7 @@ def edit(code=None):
     index = codes.index(code)
     p = plates[index]
     p['description'] = prompt_to_edit_field(p,'Description','description')
-    p['period_in_days'] = int(prompt_to_edit_field(p,'Period in days','period_in_days'))
+    p['period_in_days'] = float(prompt_to_edit_field(p,'Period in days','period_in_days'))
 
     base_prompt = "Last spun [YYYY-MM-DD | 'now' | 'None' for never]"
     field = 'last_spun'
