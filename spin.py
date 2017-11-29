@@ -67,7 +67,7 @@ def inspect(plates):
         else:
             last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
         period_in_days = timedelta(days = plate['period_in_days']) 
-        if last_spun is None or  last_spun + period_in_days < datetime.now():
+        if last_spun is None or last_spun + period_in_days < datetime.now():
             print("{} is overdue.".format(plate["code"]))
             wobbler = dict(plate)
             wobbler['last_spun_dt'] = last_spun
@@ -96,6 +96,29 @@ def check():
 
     coda = "Out of {} plates, {} need to be spun.".format(len(plates),len(wobbly_plates))
     print(textwrap.fill(coda,70))
+
+def spin(code=None):
+    plates = load()
+    if code is None:
+        code = prompt_for('Code')
+    codes = [p['code'] for p in plates]
+    if code not in codes:
+        print("There's no plate under that code. Try \n     > spin add {}".format(code))
+        return
+
+    # Find the corresponding plate to spin.
+    index = codes.index(code)
+    p = plates[index]
+    p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+    today = datetime.strftime(datetime.now(),"%Y-%m-%d")
+    if 'spin_history' in p:
+        spin_history = loads(p['spin_history'])
+        spin_history.append(today)
+        p['spin_history'] = dumps(spin_history)
+    else:
+        p['spin_history'] = dumps([today])
+
+    store(plates)
 
 def prompt_for(input_field):
     try:
