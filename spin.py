@@ -79,6 +79,31 @@ def inspect(plates):
             wobbly_plates.append(wobbler)
     return wobbly_plates
 
+def stats():
+    plates = load()
+    template = "{{:<10.10}}  {{:<30.30}} {{:<6}}  {}  {{:<12}}"
+    fmt = template.format("{:>9.9}")
+    print(fmt.format("", "", "Total", "Effective", "Period"))
+    print(fmt.format("Code","Description","spins", "period","in days"))
+    print("=========================================================================")
+    for p in plates:
+        total_spins = 0
+        effective_period = ""
+        fmt = template.format("{:9}")
+        if 'spin_history' in p:
+            spin_history = loads(p['spin_history'])
+            total_spins = len(spin_history)
+            if total_spins > 0:
+                first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
+                last_date = datetime.strptime(spin_history[-1],'%Y-%m-%d')
+                effective_period = (last_date-first_date).days/(total_spins-1.0)
+                fmt = template.format("{:>9.1f}")
+        print(fmt.format(p['code'],p['description'],
+            total_spins, 
+            effective_period,
+            p['period_in_days']))
+    print("=========================================================================\n")
+
 def check():
     plates = load()
     wobbly_plates = inspect(plates)
