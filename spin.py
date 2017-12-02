@@ -18,7 +18,7 @@
 # > spin add pi
 
 
-import sys, requests, textwrap
+import os, sys, requests, textwrap
 import fire
 
 from datetime import datetime, timedelta
@@ -50,10 +50,14 @@ def print_table(ps):
 #    f.write(dumps(plates, indent=4))
 
 def load():
-    with open(PATH+"/plates.json",'r') as f:
-    #    pprint(f.read())
-        plates = loads(f.read())
-    return plates
+    plates_filepath = PATH+"/plates.json"
+    if os.path.exists(plates_filepath):
+        with open(plates_filepath,'r') as f:
+        #    pprint(f.read())
+            plates = loads(f.read())
+        return plates
+    else:
+        return []
 
 def store(plates):
     with open(PATH+"/plates.json",'w') as f:
