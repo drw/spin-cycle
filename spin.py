@@ -34,7 +34,7 @@ def print_table(ps):
     print("=========================================================================")
     fmt = template.format("{:>7.1f}")
     for p in ps:
-        if p['last_spun_dt'] is None:
+        if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
             last_spun_date = None
         else:
             last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
@@ -108,9 +108,16 @@ def stats():
             p['period_in_days']))
     print("=========================================================================\n")
 
-def check():
+def check(show_all=False):
     plates = load()
     wobbly_plates = inspect(plates)
+    if show_all:
+        all_plates_with_lateness = wobbly_plates
+        for p in plates:
+            if p['code'] not in [q['code'] for q in all_plates_with_lateness]:
+                p['cycles_late'] = 0
+                all_plates_with_lateness.append(p)
+        wobbly_plates = all_plates_with_lateness
 
     wobbly_ps_sorted = sorted(wobbly_plates, 
                             key=lambda u: -u['cycles_late'])
@@ -125,6 +132,9 @@ def check():
 
     coda = "Out of {} plates, {} need to be spun.".format(len(plates),len(wobbly_plates))
     print(textwrap.fill(coda,70))
+
+def all():
+    check(show_all=True)
 
 def spin(code=None):
     plates = load()
