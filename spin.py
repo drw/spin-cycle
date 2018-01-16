@@ -95,7 +95,10 @@ def stats():
         effective_period = ""
         fmt = template.format("{:9}")
         if 'spin_history' in p:
-            spin_history = loads(p['spin_history'])
+            if p['spin_history'] is not None:
+                spin_history = loads(p['spin_history']) # Is it really necessary to JSON encode this list if the whole dict is being JSON encoded?
+            else:
+                spin_history = []
             total_spins = len(spin_history)
             if total_spins > 0:
                 first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
