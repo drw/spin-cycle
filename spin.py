@@ -103,8 +103,11 @@ def stats():
             if total_spins > 0:
                 first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
                 last_date = datetime.strptime(spin_history[-1],'%Y-%m-%d')
-                effective_period = (last_date-first_date).days/(total_spins-1.0)
-                fmt = template.format("{:>9.1f}")
+                if total_spins in [0,1]:
+                    effective_period = "None"
+                else:
+                    effective_period = (last_date-first_date).days/(total_spins-1.0)
+                    fmt = template.format("{:>9.1f}")
         print(fmt.format(p['code'],p['description'],
             total_spins, 
             effective_period,
