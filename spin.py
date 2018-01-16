@@ -96,7 +96,7 @@ def stats():
         fmt = template.format("{:9}")
         if 'spin_history' in p:
             if p['spin_history'] is not None:
-                spin_history = loads(p['spin_history']) # Is it really necessary to JSON encode this list if the whole dict is being JSON encoded?
+                spin_history = p['spin_history'] # A list of date_strings
             else:
                 spin_history = []
             total_spins = len(spin_history)
@@ -158,20 +158,21 @@ def spin(code=None):
         if p['spin_history'] is None:
             spin_history = []
         else:
-            spin_history = loads(p['spin_history']) # Is it really necessary to JSON encode this list if the whole dict is being JSON encoded?
+            spin_history = p['spin_history']
         if spin_history == [] and p['last_spun'] is not None:
             last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
             last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
             spin_history = [last_spun_string,today]
         else: 
             spin_history.append(today)
-        p['spin_history'] = dumps(spin_history)
+        p['spin_history'] = spin_history
     elif p['last_spun'] is not None:
         last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
         last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
         spin_history = [last_spun_string,today]
+        p['spin_history'] = spin_history
     else: 
-        p['spin_history'] = dumps([today])
+        p['spin_history'] = [today]
     p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
 
     store(plates)
