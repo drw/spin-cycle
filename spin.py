@@ -198,10 +198,16 @@ def add(code=None):
     last_spun = prompt_for("Last spun [YYYY-MM-DD | Enter for now | 'None' for never]")
     if last_spun == 'None':
         d['last_spun'] = None
+        d['spin_history'] = []
     elif last_spun == '':
         d['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+        d['spin_history'] = [datetime.strftime(datetime.now(),"%Y-%m-%d")]
     else:
         d['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
+        d['spin_history'] = [datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%d")]
+        # The above line seems like it does something and then undoes it, but really it's 
+        # validating that the entered date is in the right format.
+
     plates.append(d)
     store(plates)
     print('"{}" was added to the plates being tracked.'.format(d['description']))
