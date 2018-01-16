@@ -151,14 +151,28 @@ def spin(code=None):
     # Find the corresponding plate to spin.
     index = codes.index(code)
     p = plates[index]
-    p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+
     today = datetime.strftime(datetime.now(),"%Y-%m-%d")
     if 'spin_history' in p:
-        spin_history = loads(p['spin_history'])
-        spin_history.append(today)
+        # Load spin history from file.
+        if p['spin_history'] is None:
+            spin_history = []
+        else:
+            spin_history = loads(p['spin_history']) # Is it really necessary to JSON encode this list if the whole dict is being JSON encoded?
+        if spin_history == [] and p['last_spun'] is not None:
+            last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
+            last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
+            spin_history = [last_spun_string,today]
+        else: 
+            spin_history.append(today)
         p['spin_history'] = dumps(spin_history)
-    else:
+    elif p['last_spun'] is not None:
+        last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
+        last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
+        spin_history = [last_spun_string,today]
+    else: 
         p['spin_history'] = dumps([today])
+    p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
 
     store(plates)
 
