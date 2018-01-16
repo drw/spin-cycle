@@ -133,7 +133,7 @@ def check(show_all=False):
     print_table(wobbly_ps_by_recency)
 
 
-    coda = "Out of {} plates, {} need to be spun.".format(len(plates),len(wobbly_plates))
+    coda = "Out of {} plates, {} need{} to be spun.".format(len(plates),"s" if len(wobbly_plates) == 1 else "", len(wobbly_plates))
     print(textwrap.fill(coda,70))
 
 def all():
