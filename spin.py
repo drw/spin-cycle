@@ -27,7 +27,7 @@ from json import loads, dumps
 from parameters.local_parameters import PATH
 
 def print_table(ps):
-    template = "{{:<10.10}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<12}}"
+    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<12}}"
     fmt = template.format("{:>7.9}")
     print(fmt.format("", "", "Cycles", "", "Period"))
     print(fmt.format("Code","Description","late", "Last spun","in days"))
@@ -85,7 +85,7 @@ def inspect(plates):
 
 def stats():
     plates = load()
-    template = "{{:<10.10}}  {{:<30.30}} {{:<6}}  {}  {{:<12}}"
+    template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<12}}"
     fmt = template.format("{:>9.9}")
     print(fmt.format("", "", "Total", "Effective", "Period"))
     print(fmt.format("Code","Description","spins", "period","in days"))
