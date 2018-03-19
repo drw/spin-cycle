@@ -65,24 +65,28 @@ def store(plates):
     with open(PATH+"/plates.json",'w') as f:
         f.write(dumps(plates, indent=4))
 
+def is_spinning(plate):
+    return 'status' not in plate or plate['status'] == 'Active'
+
 def inspect(plates):
     wobbly_plates = []
     for i,plate in enumerate(plates):
-        if plate['last_spun'] is None:
-            last_spun = None
-        else:
-            last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
-        period_in_days = timedelta(days = plate['period_in_days']) 
-        if last_spun is None or last_spun + period_in_days < datetime.now():
-            print("{} is overdue.".format(plate["code"]))
-            wobbler = dict(plate)
-            wobbler['last_spun_dt'] = last_spun
-            if last_spun is None:
-                wobbler['cycles_late'] = 0
+        if is_spinning(plate):
+            if plate['last_spun'] is None:
+                last_spun = None
             else:
-                lateness = datetime.now() - (last_spun + period_in_days)
-                wobbler['cycles_late'] = lateness.total_seconds()/period_in_days.total_seconds()
-            wobbly_plates.append(wobbler)
+                last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
+            period_in_days = timedelta(days = plate['period_in_days']) 
+            if last_spun is None or last_spun + period_in_days < datetime.now():
+                print("{} is overdue.".format(plate["code"]))
+                wobbler = dict(plate)
+                wobbler['last_spun_dt'] = last_spun
+                if last_spun is None:
+                    wobbler['cycles_late'] = 0
+                else:
+                    lateness = datetime.now() - (last_spun + period_in_days)
+                    wobbler['cycles_late'] = lateness.total_seconds()/period_in_days.total_seconds()
+                wobbly_plates.append(wobbler)
     return wobbly_plates
 
 def stats():
