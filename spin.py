@@ -27,21 +27,23 @@ from json import loads, dumps
 from parameters.local_parameters import PATH
 
 def print_table(ps):
-    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<12}}"
+    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<6}} {{:<6}}"
     fmt = template.format("{:>7.9}")
-    print(fmt.format("", "", "Cycles", "", "Period"))
-    print(fmt.format("Code","Description","late", "Last spun","in days"))
-    print("=========================================================================")
+    print(fmt.format("", "", "Cycles", "", "Period", ""))
+    print(fmt.format("Code","Description","late", "Last spun","in days", "Status"))
+    print("================================================================================")
     fmt = template.format("{:>7.1f}")
     for p in ps:
         if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
             last_spun_date = None
         else:
             last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
+        if 'status' not in p or p['status'] is None:
+            p['status'] = 'Active'
         print(fmt.format(p['code'],p['description'],
             p['cycles_late'], last_spun_date,
-            p['period_in_days']))
-    print("=========================================================================\n")
+            p['period_in_days'],p['status']))
+    print("================================================================================\n")
 
 #plates = {"trash": {"period_in_days": 3, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, "pi": {"period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } }
 #plates = [{"code": "trash", "period_in_days": 7, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, {"code": "pi", "period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } ]
@@ -85,11 +87,11 @@ def inspect(plates):
 
 def stats():
     plates = load()
-    template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<12}}"
+    template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<6}} {{:<6}}"
     fmt = template.format("{:>9.9}")
-    print(fmt.format("", "", "Total", "Effective", "Period"))
-    print(fmt.format("Code","Description","spins", "period","in days"))
-    print("=========================================================================")
+    print(fmt.format("", "", "Total", "Effective", "Period", ""))
+    print(fmt.format("Code","Description","spins", "period","in days", "Status"))
+    print("=============================================================================")
     for p in plates:
         total_spins = 0
         effective_period = ""
@@ -108,11 +110,14 @@ def stats():
                 else:
                     effective_period = (last_date-first_date).days/(total_spins-1.0)
                     fmt = template.format("{:>9.1f}")
+        if 'status' not in p or p['status'] is None:
+            p['status'] = 'Active'
         print(fmt.format(p['code'],p['description'],
             total_spins, 
             effective_period,
-            p['period_in_days']))
-    print("=========================================================================\n")
+            p['period_in_days'],
+            p['status']))
+    print("=============================================================================\n")
 
 def check(show_all=False):
     plates = load()
@@ -141,6 +146,24 @@ def check(show_all=False):
 
 def all():
     check(show_all=True)
+
+def shelve(code=None):
+    plates = load()
+    if code is None:
+        code = prompt_for('Code')
+    codes = [p['code'] for p in plates]
+    if code not in codes:
+        print("There's no plate under that code. Try \n     > spin add {}".format(code))
+        return
+
+    # Find the corresponding plate to spin.
+    index = codes.index(code)
+    p = plates[index]
+
+    today = datetime.strftime(datetime.now(),"%Y-%m-%d")
+    p['status'] = 'Done'
+    store(plates)
+    print('Put the {} plate ("{}") on the shelf.'.format(p['code'],p['description']))
 
 def spin(code=None):
     plates = load()
