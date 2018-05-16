@@ -250,6 +250,22 @@ def prompt_to_edit_field(d, base_prompt, field):
     else:
         return new_value
 
+def view(code=None):
+    plates = load()
+    if code is None:
+        print("You have to specify the code of an existing plate to view.")
+        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+        code = prompt_for('Enter the code')
+    codes = [p['code'] for p in plates]
+    while code not in codes:
+        print("There's no plate under that code. Try again.")
+        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+        code = prompt_for('Enter the code of the plate you want to edit')
+
+    index = codes.index(code)
+    p = plates[index]
+    pprint(p)
+
 def edit(code=None):
     plates = load()
     if code is None:
