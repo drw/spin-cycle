@@ -24,7 +24,7 @@ import fire
 from datetime import datetime, timedelta
 from pprint import pprint
 from json import loads, dumps
-from parameters.local_parameters import PATH
+from parameters.local_parameters import PATH, PLATES_FILE
 
 def print_table(ps):
     template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<6}} {{:<6}}"
@@ -52,7 +52,7 @@ def print_table(ps):
 #    f.write(dumps(plates, indent=4))
 
 def load():
-    plates_filepath = PATH+"/plates.json"
+    plates_filepath = PATH+"/"+PLATES_FILE
     if os.path.exists(plates_filepath):
         with open(plates_filepath,'r') as f:
         #    pprint(f.read())
@@ -62,7 +62,7 @@ def load():
         return []
 
 def store(plates):
-    with open(PATH+"/plates.json",'w') as f:
+    with open(PATH+"/"+PLATES_FILE,'w') as f:
         f.write(dumps(plates, indent=4))
 
 def is_spinning(plate):
