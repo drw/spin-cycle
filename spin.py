@@ -156,7 +156,10 @@ def check(show_all=False):
 def all():
     check(show_all=True)
 
-def shelve(code=None):
+def shelve(code=None,shelving_mode='Done'):
+    # shelving_mode allows for a plate to be paused, but
+    # this is not being taken into account in its spin stats
+    # calculations yet.
     plates = load()
     if code is None:
         code = prompt_for('Code')
@@ -170,9 +173,9 @@ def shelve(code=None):
     p = plates[index]
 
     today = datetime.strftime(datetime.now(),"%Y-%m-%d")
-    p['status'] = 'Done'
+    p['status'] = shelving_mode
     store(plates)
-    print('Put the {} plate ("{}") on the shelf.'.format(p['code'],p['description']))
+    print('Put the {} plate ("{}") on the shelf with mode {}.'.format(p['code'],p['description'], shelving_mode))
 
 def spin(code=None):
     plates = load()
