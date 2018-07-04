@@ -156,6 +156,33 @@ def check(show_all=False):
 def all():
     check(show_all=True)
 
+def projects():
+    """Show a project view (rather than a communications-oriented spin view)
+    by using a bar chart, the first spin date, the current date, and whether
+    the project is still active."""
+    ps = load()
+    fmt= "{:<11.11}  {:<}{}"
+    ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
+    for project in ps:
+        start = project['spin_history'][0] # e.g., "2018-02-02"
+        start_dt = datetime.strptime(start, "%Y-%m-%d")
+        if 'status' not in project or project['status'] in ['Active']:
+            end_dt = datetime.now()
+        else:
+            end = project['spin_history'][-1] # e.g., "2018-10-10"
+            end_dt = datetime.strptime(end, "%Y-%m-%d")
+
+        if 'status' in project:
+            terminator = ender[project['status']]
+        else:
+            terminator = ender['Active']
+        duration = int((end_dt - start_dt).days/7.0) # in weeks
+        print(fmt.format(project['code'], '|' * duration, terminator))
+
+def p():
+    """A short alias to produce the project-view output."""
+    projects()
+
 def shelve(code=None,shelving_mode='Done'):
     # shelving_mode allows for a plate to be paused, but
     # this is not being taken into account in its spin stats
