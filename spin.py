@@ -68,15 +68,19 @@ def store(plates):
 def is_spinning(plate):
     return 'status' not in plate or plate['status'] == 'Active'
 
+def last_spun_dt(plate):
+    if plate['last_spun'] is None:
+        last_spun = None
+    else:
+        last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f")
+    return last_spun
+
 def inspect(plates):
     wobbly_plates = []
     for i,plate in enumerate(plates):
         if is_spinning(plate):
-            if plate['last_spun'] is None:
-                last_spun = None
-            else:
-                last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f") 
             period_in_days = timedelta(days = plate['period_in_days']) 
+            last_spun = last_spun_dt(plate)
             if last_spun is None or last_spun + period_in_days < datetime.now():
                 print("{} is overdue.".format(plate["code"]))
                 wobbler = dict(plate)
@@ -131,6 +135,7 @@ def check(show_all=False):
         for p in plates:
             if p['code'] not in [q['code'] for q in all_plates_with_lateness]:
                 p['cycles_late'] = 0
+                p['last_spun_dt'] = last_spun_dt(p)
                 all_plates_with_lateness.append(p)
         wobbly_plates = all_plates_with_lateness
 
