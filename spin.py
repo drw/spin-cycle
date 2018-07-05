@@ -179,7 +179,8 @@ def projects():
         else:
             terminator = ender['Active']
         duration = int((end_dt - start_dt).days/7.0) # in weeks
-        bar = fmt.format(project['code'], '|' * duration, terminator)
+        duration_less_one = duration-1 if duration > 0 else 0
+        bar = fmt.format(project['code'], '|' * duration_less_one, terminator)
         print(bar)
         bars.append(bar)
     return bars
