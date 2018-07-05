@@ -225,6 +225,10 @@ def shelve(code=None,shelving_mode='Done'):
     p = plates[index]
 
     today = datetime.strftime(datetime.now(),"%Y-%m-%d")
+    if shelving_mode == p['status']:
+        print('The plate ("{}") is already shelved with status {}.'.format(p['code'],p['status']))
+        return
+
     p['status'] = shelving_mode
     store(plates)
     print('Put the {} plate ("{}") on the shelf with mode {}.'.format(p['code'],p['description'], shelving_mode))
