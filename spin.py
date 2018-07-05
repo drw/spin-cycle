@@ -164,8 +164,11 @@ def projects():
     ps = load()
     fmt= "{:<11.11}  {:<}{}"
     ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
+    scorer = {'Active': 0, 'Paused': 1, 'Done': 2}
     bars = []
-    for project in ps:
+    index = []
+    scores = {}
+    for k,project in enumerate(ps):
         start = project['spin_history'][0] # e.g., "2018-02-02"
         start_dt = datetime.strptime(start, "%Y-%m-%d")
         if 'status' not in project or project['status'] in ['Active']:
@@ -176,14 +179,24 @@ def projects():
 
         if 'status' in project:
             terminator = ender[project['status']]
+            status = project['status']
+            score = scorer[status]
         else:
             terminator = ender['Active']
+            score = scorer['Active']
         duration = int((end_dt - start_dt).days/7.0) # in weeks
         duration_less_one = duration-1 if duration > 0 else 0
         bar = fmt.format(project['code'], '|' * duration_less_one, terminator)
-        print(bar)
         bars.append(bar)
-    return bars
+        index.append(k)
+        scores[bar] = score
+
+    sorted_bars = sorted(bars,key = lambda b: scores[b])
+
+    for k,bar in zip(index,sorted_bars):
+        print(bar)
+
+    return sorted_bars
 
 
 def p():
