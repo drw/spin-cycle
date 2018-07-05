@@ -162,7 +162,7 @@ def projects():
     by using a bar chart, the first spin date, the current date, and whether
     the project is still active."""
     ps = load()
-    fmt= "{:<11.11}  {:<}{}"
+    fmt= "{:<11.11}  {:>3}  {:<}{}"
     ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
     scorer = {'Active': 0, 'Paused': 1, 'Done': 2}
     bars = []
@@ -186,7 +186,7 @@ def projects():
             score = scorer['Active']
         duration = int((end_dt - start_dt).days/7.0) # in weeks
         duration_less_one = duration-1 if duration > 0 else 0
-        bar = fmt.format(project['code'], '|' * duration_less_one, terminator)
+        bar = fmt.format(project['code'], duration, '|' * duration_less_one, terminator)
         bars.append(bar)
         index.append(k)
         scores[bar] = score
