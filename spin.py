@@ -208,6 +208,15 @@ def p_watch():
     msg = '\n'.join(bars)
     send_to_slack(msg,username='Captain Projecto',channel='@david',icon=':film_projector:')
 
+def load_pauses(p):
+    if 'pauses' in p:
+        pauses = p['pauses'] # A list of 2-element lists, with the first element being the
+        # beginning of the pause and the second being the end of the pause (equal to None) if
+        # the pause is ongoing.
+    else:
+        pauses = []
+    return pauses
+
 def shelve(code=None,shelving_mode='Done'):
     # shelving_mode allows for a plate to be paused, but
     # this is not being taken into account in its spin stats
@@ -225,9 +234,27 @@ def shelve(code=None,shelving_mode='Done'):
     p = plates[index]
 
     today = datetime.strftime(datetime.now(),"%Y-%m-%d")
-    if shelving_mode == p['status']:
-        print('The plate ("{}") is already shelved with status {}.'.format(p['code'],p['status']))
+
+    previous_status = str(p['status'])
+    if shelving_mode == previous_status:
+        print('The plate ("{}") is already shelved with status {}.'.format(p['code'],previous_status))
         return
+
+    if shelving_mode == 'Paused':
+        pauses = load_pauses(p)
+        pauses.append([today, None])
+        p['pauses'] = pauses
+    elif shelving_mode == 'Active' and previous_status == 'Paused':
+        pauses = load_pauses(p)
+        if len(pauses) == 0:
+            print("Inferring missing pause history...")
+            pauses = [[p['spin_history'],today]]
+        else:
+            assert pauses[-1][1] == None
+            pauses[-1][1] = today
+        p['pauses'] = pauses
+    #else: # Maybe deal with cases where projects are reawakened (Done ==> Active, Done ==> Paused),
+    # though Done ==> Paused will already be handled by the first if statement above.
 
     p['status'] = shelving_mode
     store(plates)
@@ -257,7 +284,7 @@ def spin(code=None):
             last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
             last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
             spin_history = [last_spun_string,today]
-        else: 
+        else:
             spin_history.append(today)
         p['spin_history'] = spin_history
     elif p['last_spun'] is not None:
@@ -265,7 +292,7 @@ def spin(code=None):
         last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
         spin_history = [last_spun_string,today]
         p['spin_history'] = spin_history
-    else: 
+    else:
         p['spin_history'] = [today]
     p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
 
