@@ -205,7 +205,7 @@ def form_bar(p,start_dt,end_dt,terminator):
     bar = fmt.format(p['code'], duration, d_bar, terminator)
     return bar
 
-def projects():
+def projects(full=False):
     """Show a project view (rather than a communications-oriented spin view)
     by using a bar chart, the first spin date, the current date, and whether
     the project is still active."""
@@ -218,19 +218,21 @@ def projects():
     for k,project in enumerate(ps):
         start = project['spin_history'][0] # e.g., "2018-02-02"
         start_dt = datetime.strptime(start, "%Y-%m-%d")
-        if 'status' not in project or project['status'] in ['Active']:
+        if 'status' not in project:
+            status = 'Active'
+        else:
+            status = project['status']
+        if status in ['Active']:
             end_dt = datetime.now()
         else:
             end = project['spin_history'][-1] # e.g., "2018-10-10"
             end_dt = datetime.strptime(end, "%Y-%m-%d")
+        if full and status == 'Paused':
+            end_dt = datetime.now() # This forces even paused projects to print
+            # full bar charts.
 
-        if 'status' in project:
-            terminator = ender[project['status']]
-            status = project['status']
-            score = scorer[status]
-        else:
-            terminator = ender['Active']
-            score = scorer['Active']
+        terminator = ender[status]
+        score = scorer[status]
         bar = form_bar(project,start_dt,end_dt,terminator)
         bars.append(bar)
         index.append(k)
@@ -244,9 +246,9 @@ def projects():
     return sorted_bars
 
 
-def p():
+def p(full=False):
     """A short alias to produce the project-view output."""
-    projects()
+    projects(full)
 
 def p_watch():
     bars = projects()
