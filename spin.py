@@ -157,12 +157,18 @@ def check(show_all=False):
 def all():
     check(show_all=True)
 
+def form_bar(p,start_dt,end_dt,terminator):
+    fmt= "{:<11.11}  {:>3}  {:<}{}"
+    duration = int((end_dt - start_dt).days/7.0) # in weeks
+    duration_less_one = duration-1 if duration > 0 else 0
+    bar = fmt.format(p['code'], duration, '|' * duration_less_one, terminator)
+    return bar
+
 def projects():
     """Show a project view (rather than a communications-oriented spin view)
     by using a bar chart, the first spin date, the current date, and whether
     the project is still active."""
     ps = load()
-    fmt= "{:<11.11}  {:>3}  {:<}{}"
     ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
     scorer = {'Active': 0, 'Paused': 1, 'Done': 2}
     bars = []
@@ -184,9 +190,7 @@ def projects():
         else:
             terminator = ender['Active']
             score = scorer['Active']
-        duration = int((end_dt - start_dt).days/7.0) # in weeks
-        duration_less_one = duration-1 if duration > 0 else 0
-        bar = fmt.format(project['code'], duration, '|' * duration_less_one, terminator)
+        bar = form_bar(project,start_dt,end_dt,terminator)
         bars.append(bar)
         index.append(k)
         scores[bar] = score
