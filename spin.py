@@ -187,10 +187,22 @@ def is_more_in(start,span,ranges):
     return cumulative + cumulative > end - start
 
 def form_bar(p,start_dt,end_dt,terminator):
+    unit = timedelta(days = 7)
     fmt= "{:<11.11}  {:>3}  {:<}{}"
     duration = int((end_dt - start_dt).days/7.0) # in weeks
-    duration_less_one = duration-1 if duration > 0 else 0
-    bar = fmt.format(p['code'], duration, '|' * duration_less_one, terminator)
+    #duration_less_one = duration-1 if duration > 0 else 0
+    #d_bar = '|' * duration_less_one
+    pauses = load_pauses(p)
+    d = start_dt
+    d_bar = ''
+    while d < end_dt:
+        if is_more_in(d,unit,pauses):
+            d_bar += '"'
+        else:
+            d_bar += '|'
+        d += unit
+
+    bar = fmt.format(p['code'], duration, d_bar, terminator)
     return bar
 
 def projects():
