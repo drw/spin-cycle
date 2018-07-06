@@ -157,6 +157,35 @@ def check(show_all=False):
 def all():
     check(show_all=True)
 
+def intersection(start1,end1,start2,end2):
+    start = max(start1,start2)
+    end = min(end1,end2)
+    diff = end - start
+    if diff < timedelta(days = 0):
+        diff = timedelta(days = 0)
+    return diff
+
+def is_more_in(start,span,ranges):
+    """Determine whether a given time span (from start to start+span)
+    is more in the periods represented by ranges (where ranges
+    has the form [(begin1,end1),(begin2,end2),...(beginN,None)]."""
+
+    cumulative = timedelta(days=0)
+
+    end = start + span
+    if end > datetime.now():
+        end = datetime.now()
+
+    for r in ranges:
+
+        r_start_dt = datetime.strptime(r[0],"%Y-%m-%d")
+        if r[1] is None:
+            r_end_dt = datetime.now()
+        else:
+            r_end_dt = datetime.strptime(r[1],"%Y-%m-%d")
+        cumulative += intersection(start,end,r_start_dt,r_end_dt)
+    return cumulative + cumulative > end - start
+
 def form_bar(p,start_dt,end_dt,terminator):
     fmt= "{:<11.11}  {:>3}  {:<}{}"
     duration = int((end_dt - start_dt).days/7.0) # in weeks
