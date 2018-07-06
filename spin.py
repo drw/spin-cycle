@@ -202,6 +202,8 @@ def form_bar(p,start_dt,end_dt,terminator):
             d_bar += '|'
         d += unit
 
+    if len(d_bar) > 0:
+        d_bar = d_bar[:-1]
     bar = fmt.format(p['code'], duration, d_bar, terminator)
     return bar
 
