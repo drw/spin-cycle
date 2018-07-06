@@ -260,6 +260,15 @@ def shelve(code=None,shelving_mode='Done'):
     store(plates)
     print('Put the {} plate ("{}") on the shelf with mode {}.'.format(p['code'],p['description'], shelving_mode))
 
+def pause(code=None):
+    shelve(code,shelving_mode='Paused')
+
+def unpause(code=None):
+    shelve(code,shelving_mode='Active')
+
+def done(code=None):
+    shelve(code,shelving_mode='Done')
+
 def spin(code=None):
     plates = load()
     if code is None:
