@@ -66,6 +66,13 @@ def store(plates):
     with open(PATH+"/"+PLATES_FILE,'w') as f:
         f.write(dumps(plates, indent=4))
 
+def find_all_racks():
+    from os import listdir
+    from os.path import isfile, join
+    import re
+    onlyfiles = [f for f in listdir(PATH) if isfile(join(PATH, f))]
+    return [re.sub("\.json","",f) for f in onlyfiles if re.search("json$",f)]
+
 def is_spinning(plate):
     return 'status' not in plate or plate['status'] == 'Active'
 
