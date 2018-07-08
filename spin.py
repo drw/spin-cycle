@@ -214,58 +214,6 @@ def load_pauses(p):
         pauses = []
     return pauses
 
-def shelve(code=None,shelving_mode='Done'):
-    # shelving_mode allows for a plate to be paused, but
-    # this is not being taken into account in its spin stats
-    # calculations yet.
-    plates = load()
-    if code is None:
-        code = prompt_for('Code')
-    codes = [p['code'] for p in plates]
-    if code not in codes:
-        print("There's no plate under that code. Try \n     > spin add {}".format(code))
-        return
-
-    # Find the corresponding plate to spin.
-    index = codes.index(code)
-    p = plates[index]
-
-    today = datetime.strftime(datetime.now(),"%Y-%m-%d")
-
-    previous_status = str(p['status'])
-    if shelving_mode == previous_status:
-        print('The plate ("{}") is already shelved with status {}.'.format(p['code'],previous_status))
-        return
-
-    if shelving_mode == 'Paused':
-        pauses = load_pauses(p)
-        pauses.append([today, None])
-        p['pauses'] = pauses
-    elif shelving_mode == 'Active' and previous_status == 'Paused':
-        pauses = load_pauses(p)
-        if len(pauses) == 0:
-            print("Inferring missing pause history...")
-            pauses = [[p['spin_history'],today]]
-        else:
-            assert pauses[-1][1] == None
-            pauses[-1][1] = today
-        p['pauses'] = pauses
-    #else: # Maybe deal with cases where projects are reawakened (Done ==> Active, Done ==> Paused),
-    # though Done ==> Paused will already be handled by the first if statement above.
-
-    p['status'] = shelving_mode
-    store(plates)
-    print('Put the {} plate ("{}") on the shelf with mode {}.'.format(p['code'],p['description'], shelving_mode))
-
-def pause(code=None):
-    shelve(code,shelving_mode='Paused')
-
-def unpause(code=None):
-    shelve(code,shelving_mode='Active')
-
-def done(code=None):
-    shelve(code,shelving_mode='Done')
-
 def prompt_for(input_field):
     try:
         text = raw_input(input_field+": ")  # Python 2
@@ -449,6 +397,58 @@ class Plates(object):
         p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
 
         self.store(plates)
+
+    def shelve(self,code=None,shelving_mode='Done'):
+        # shelving_mode allows for a plate to be paused, but
+        # this is not being taken into account in its spin stats
+        # calculations yet.
+        plates = self.load()
+        if code is None:
+            code = prompt_for('Code')
+        codes = [p['code'] for p in plates]
+        if code not in codes:
+            print("There's no plate under that code. Try \n     > spin add {}".format(code))
+            return
+
+        # Find the corresponding plate to spin.
+        index = codes.index(code)
+        p = plates[index]
+
+        today = datetime.strftime(datetime.now(),"%Y-%m-%d")
+
+        previous_status = str(p['status']) if 'status' in p else 'Active'
+        if shelving_mode == previous_status:
+            print('The plate ("{}") is already shelved with status {}.'.format(p['code'],previous_status))
+            return
+
+        if shelving_mode == 'Paused':
+            pauses = load_pauses(p)
+            pauses.append([today, None])
+            p['pauses'] = pauses
+        elif shelving_mode == 'Active' and previous_status == 'Paused':
+            pauses = load_pauses(p)
+            if len(pauses) == 0:
+                print("Inferring missing pause history...")
+                pauses = [[p['spin_history'],today]]
+            else:
+                assert pauses[-1][1] == None
+                pauses[-1][1] = today
+            p['pauses'] = pauses
+        #else: # Maybe deal with cases where projects are reawakened (Done ==> Active, Done ==> Paused),
+        # though Done ==> Paused will already be handled by the first if statement above.
+
+        p['status'] = shelving_mode
+        self.store(plates)
+        print('Put the {} plate ("{}") on the shelf with mode {}.'.format(p['code'],p['description'], shelving_mode))
+
+    def pause(self,code=None):
+        self.shelve(code,shelving_mode='Paused')
+
+    def unpause(self,code=None):
+        self.shelve(code,shelving_mode='Active')
+
+    def done(self,code=None):
+        self.shelve(code,shelving_mode='Done')
 
     def stats(self):
         plates = self.load()
