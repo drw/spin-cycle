@@ -386,7 +386,7 @@ class Plates(object):
 
     def stats(self):
         plates = self.load()
-        template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<6}} {{:<6}}"
+        template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<7}} {{:<6}}"
         fmt = template.format("{:>9.9}")
         print(fmt.format("", "", "Total", "Effective", "Period", ""))
         print(fmt.format("Code","Description","spins", "period","in days", "Status"))
