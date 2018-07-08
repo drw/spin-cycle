@@ -27,6 +27,8 @@ from json import loads, dumps
 from parameters.local_parameters import PATH, PLATES_FILE
 from notify import send_to_slack
 
+
+
 def print_table(ps):
     template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<6}} {{:<6}}"
     fmt = template.format("{:>7.9}")
@@ -450,12 +452,133 @@ def edit(code=None):
         else:
             p['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
     # plates has now been updated since p points to the corresponding element in plates.
+
+    # [ ] What about editing the spin history?
     store(plates)
     print('"{}" has been edited.'.format(p['description']))
     check()
+
+class Plates(object):
+    """A collection of plates/projects, with all the functions that one might want to call
+    from the command line through fire as part of the Plates object."""
+
+    def __init__(self, plates_file=PLATES_FILE):
+        self._filepath = PATH+"/"+plates_file
+
+    def __str__(self):
+        return self._filepath
+
+    def load(self):
+        #plates_filepath = PATH+"/"+PLATES_FILE
+        plates_filepath = self._filepath
+        if os.path.exists(plates_filepath):
+            with open(plates_filepath,'r') as f:
+                plates = loads(f.read())
+            return plates
+        else:
+            return []
+
+    def store(self,plates):
+        with open(self._filepath,'w') as f:
+            f.write(dumps(plates, indent=4))
+
+    def view(self,code=None):
+        plates = self.load()
+        if code is None:
+            print("You have to specify the code of an existing plate to view.")
+            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            code = prompt_for('Enter the code')
+        codes = [p['code'] for p in plates]
+        while code not in codes:
+            print("There's no plate under that code. Try again.")
+            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            code = prompt_for('Enter the code of the plate you want to edit')
+
+        index = codes.index(code)
+        p = plates[index]
+        pprint(p)
+
+    def edit(self,code=None):
+        plates = self.load()
+        if code is None:
+            print("You have to specify the code of an existing plate to edit.")
+            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            code = prompt_for('Enter the code')
+        codes = [p['code'] for p in plates]
+        while code not in codes:
+            print("There's no plate under that code. Try again.")
+            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            code = prompt_for('Enter the code of the plate you want to edit')
+
+        index = codes.index(code)
+        p = plates[index]
+        p['description'] = prompt_to_edit_field(p,'Description','description')
+        p['period_in_days'] = float(prompt_to_edit_field(p,'Period in days','period_in_days'))
+
+        base_prompt = "Last spun [YYYY-MM-DD | 'now' | 'None' for never]"
+        field = 'last_spun'
+        last_spun = prompt_for('{} ({})'.format(base_prompt, p[field]))
+        if last_spun != '':
+            if last_spun == 'None':
+                p['last_spun'] = None
+            elif last_spun == 'now':
+                p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+            else:
+                p['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
+        # plates has now been updated since p points to the corresponding element in plates.
+
+        # [ ] What about editing the spin history?
+        self.store(plates)
+        print('"{}" has been edited.'.format(p['description']))
+        check()
+
+    def spin(self,code=None):
+        plates = self.load()
+        if code is None:
+            code = prompt_for('Code')
+        codes = [p['code'] for p in plates]
+        if code not in codes:
+            print("There's no plate under that code. Try \n     > spin add {}".format(code))
+            return
+
+        # Find the corresponding plate to spin.
+        index = codes.index(code)
+        p = plates[index]
+
+        today = datetime.strftime(datetime.now(),"%Y-%m-%d")
+        if 'spin_history' in p:
+            # Load spin history from file.
+            if p['spin_history'] is None:
+                spin_history = []
+            else:
+                spin_history = p['spin_history']
+            if spin_history == [] and p['last_spun'] is not None:
+                last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
+                last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
+                spin_history = [last_spun_string,today]
+            else:
+                spin_history.append(today)
+            p['spin_history'] = spin_history
+        elif p['last_spun'] is not None:
+            last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
+            last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
+            spin_history = [last_spun_string,today]
+            p['spin_history'] = spin_history
+        else:
+            p['spin_history'] = [today]
+        p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+
+        self.store(plates)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         check() # Make this the default.
     else:
-        fire.Fire()
+        all_racks = find_all_racks()
+        arg1 = sys.argv[1]
+        if arg1 in all_racks: # If the first argument designates 
+            plates_file = "{}.json".format(arg1) # one of the plates
+            del(sys.argv[1]) # peel it off, and use it to override the
+            fire.Fire(Plates(plates_file=plates_file)) # default plates file.
+        else:
+            fire.Fire(Plates())
