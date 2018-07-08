@@ -266,44 +266,6 @@ def unpause(code=None):
 def done(code=None):
     shelve(code,shelving_mode='Done')
 
-def spin(code=None):
-    plates = load()
-    if code is None:
-        code = prompt_for('Code')
-    codes = [p['code'] for p in plates]
-    if code not in codes:
-        print("There's no plate under that code. Try \n     > spin add {}".format(code))
-        return
-
-    # Find the corresponding plate to spin.
-    index = codes.index(code)
-    p = plates[index]
-
-    today = datetime.strftime(datetime.now(),"%Y-%m-%d")
-    if 'spin_history' in p:
-        # Load spin history from file.
-        if p['spin_history'] is None:
-            spin_history = []
-        else:
-            spin_history = p['spin_history']
-        if spin_history == [] and p['last_spun'] is not None:
-            last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
-            last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
-            spin_history = [last_spun_string,today]
-        else:
-            spin_history.append(today)
-        p['spin_history'] = spin_history
-    elif p['last_spun'] is not None:
-        last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
-        last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
-        spin_history = [last_spun_string,today]
-        p['spin_history'] = spin_history
-    else:
-        p['spin_history'] = [today]
-    p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
-
-    store(plates)
-
 def prompt_for(input_field):
     try:
         text = raw_input(input_field+": ")  # Python 2
