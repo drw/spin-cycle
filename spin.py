@@ -139,58 +139,6 @@ def form_bar(p,start_dt,end_dt,terminator):
     bar = fmt.format(p['code'], duration, d_bar, terminator)
     return bar
 
-def projects(full=False):
-    """Show a project view (rather than a communications-oriented spin view)
-    by using a bar chart, the first spin date, the current date, and whether
-    the project is still active."""
-    ps = load()
-    ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
-    scorer = {'Active': 0, 'Paused': 1, 'Done': 2}
-    bars = []
-    index = []
-    scores = {}
-    for k,project in enumerate(ps):
-        start = project['spin_history'][0] # e.g., "2018-02-02"
-        start_dt = datetime.strptime(start, "%Y-%m-%d")
-        if 'status' not in project:
-            status = 'Active'
-        else:
-            status = project['status']
-        if status in ['Active']:
-            end_dt = datetime.now()
-        else:
-            end = project['spin_history'][-1] # e.g., "2018-10-10"
-            end_dt = datetime.strptime(end, "%Y-%m-%d")
-        if full and status == 'Paused':
-            end_dt = datetime.now() # This forces even paused projects to print
-            # full bar charts.
-
-        # [ ] Once a paused project is unpaused, it will make sense to
-        # exclude the paused weeks from the non-full bar chart.
-        terminator = ender[status]
-        score = scorer[status]
-        bar = form_bar(project,start_dt,end_dt,terminator)
-        bars.append(bar)
-        index.append(k)
-        scores[bar] = score
-
-    sorted_bars = sorted(bars,key = lambda b: scores[b])
-
-    for k,bar in zip(index,sorted_bars):
-        print(bar)
-
-    return sorted_bars
-
-
-def p(full=False):
-    """A short alias to produce the project-view output."""
-    projects(full)
-
-def p_watch():
-    bars = projects()
-    msg = '\n'.join(bars)
-    send_to_slack(msg,username='Captain Projecto',channel='@david',icon=':film_projector:')
-
 def load_pauses(p):
     if 'pauses' in p:
         pauses = p['pauses'] # A list of 2-element lists, with the first element being the
@@ -469,6 +417,61 @@ class Plates(object):
                 p['period_in_days'],
                 p['status']))
         print("=============================================================================\n")
+
+    ##### PROJECT-VIEW FUNCTIONS #####
+
+    def projects(self, full=False):
+        """Show a project view (rather than a communications-oriented spin view)
+        by using a bar chart, the first spin date, the current date, and whether
+        the project is still active."""
+        ps = self.load()
+        ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
+        scorer = {'Active': 0, 'Paused': 1, 'Done': 2}
+        bars = []
+        index = []
+        scores = {}
+        for k,project in enumerate(ps):
+            start = project['spin_history'][0] # e.g., "2018-02-02"
+            start_dt = datetime.strptime(start, "%Y-%m-%d")
+            if 'status' not in project:
+                status = 'Active'
+            else:
+                status = project['status']
+            if status in ['Active']:
+                end_dt = datetime.now()
+            else:
+                end = project['spin_history'][-1] # e.g., "2018-10-10"
+                end_dt = datetime.strptime(end, "%Y-%m-%d")
+            if full and status == 'Paused':
+                end_dt = datetime.now() # This forces even paused projects to print
+                # full bar charts.
+
+            # [ ] Once a paused project is unpaused, it will make sense to
+            # exclude the paused weeks from the non-full bar chart.
+            terminator = ender[status]
+            score = scorer[status]
+            bar = form_bar(project,start_dt,end_dt,terminator)
+            bars.append(bar)
+            index.append(k)
+            scores[bar] = score
+
+        sorted_bars = sorted(bars,key = lambda b: scores[b])
+
+        for k,bar in zip(index,sorted_bars):
+            print(bar)
+
+        return sorted_bars
+
+    def p(self,full=False):
+        """A short alias to produce the project-view output."""
+        self.projects(full)
+
+    def p_watch(self):
+        bars = self.projects()
+        msg = '\n'.join(bars)
+        send_to_slack(msg,username='Captain Projecto',channel='@david',icon=':film_projector:')
+
+    ##### END PROJECT-VIEW FUNCTIONS #####
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
