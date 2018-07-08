@@ -347,56 +347,6 @@ def prompt_to_edit_field(d, base_prompt, field):
     else:
         return new_value
 
-def view(code=None):
-    plates = load()
-    if code is None:
-        print("You have to specify the code of an existing plate to view.")
-        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
-        code = prompt_for('Enter the code')
-    codes = [p['code'] for p in plates]
-    while code not in codes:
-        print("There's no plate under that code. Try again.")
-        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
-        code = prompt_for('Enter the code of the plate you want to edit')
-
-    index = codes.index(code)
-    p = plates[index]
-    pprint(p)
-
-def edit(code=None):
-    plates = load()
-    if code is None:
-        print("You have to specify the code of an existing plate to edit.")
-        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
-        code = prompt_for('Enter the code')
-    codes = [p['code'] for p in plates]
-    while code not in codes:
-        print("There's no plate under that code. Try again.")
-        print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
-        code = prompt_for('Enter the code of the plate you want to edit')
-
-    index = codes.index(code)
-    p = plates[index]
-    p['description'] = prompt_to_edit_field(p,'Description','description')
-    p['period_in_days'] = float(prompt_to_edit_field(p,'Period in days','period_in_days'))
-
-    base_prompt = "Last spun [YYYY-MM-DD | 'now' | 'None' for never]"
-    field = 'last_spun'
-    last_spun = prompt_for('{} ({})'.format(base_prompt, p[field]))
-    if last_spun != '':
-        if last_spun == 'None':
-            p['last_spun'] = None
-        elif last_spun == 'now':
-            p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
-        else:
-            p['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
-    # plates has now been updated since p points to the corresponding element in plates.
-
-    # [ ] What about editing the spin history?
-    store(plates)
-    print('"{}" has been edited.'.format(p['description']))
-    check()
-
 class Plates(object):
     """A collection of plates/projects, with all the functions that one might want to call
     from the command line through fire as part of the Plates object."""
@@ -498,7 +448,7 @@ class Plates(object):
         # [ ] What about editing the spin history?
         self.store(plates)
         print('"{}" has been edited.'.format(p['description']))
-        check()
+        self.check()
 
     def spin(self,code=None):
         plates = self.load()
