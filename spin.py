@@ -311,35 +311,6 @@ def prompt_for(input_field):
         text = input(input_field+": ")  # Python 3
     return text
 
-def add(code=None):
-    plates = load()
-    d = {'code': code}
-    if code is None:
-        d['code'] = prompt_for('Code')
-    if d['code'] in [p['code'] for p in plates]:
-        print("There's already a plate under that code. Try \n     > spin edit {}".format(d['code']))
-        return
-
-    d['description'] = prompt_for('Description')
-    d['period_in_days'] = float(prompt_for('Period in days'))
-    last_spun = prompt_for("Last spun [YYYY-MM-DD | Enter for now | 'None' for never]")
-    if last_spun == 'None':
-        d['last_spun'] = None
-        d['spin_history'] = []
-    elif last_spun == '':
-        d['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
-        d['spin_history'] = [datetime.strftime(datetime.now(),"%Y-%m-%d")]
-    else:
-        d['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
-        d['spin_history'] = [datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%d")]
-        # The above line seems like it does something and then undoes it, but really it's 
-        # validating that the entered date is in the right format.
-
-    plates.append(d)
-    store(plates)
-    print('"{}" was added to the plates being tracked.'.format(d['description']))
-    check()
-
 def prompt_to_edit_field(d, base_prompt, field):
     new_value = prompt_for('{} ({})'.format(base_prompt, d[field]))
     if new_value == '':
@@ -415,6 +386,35 @@ class Plates(object):
         index = codes.index(code)
         p = plates[index]
         pprint(p)
+
+    def add(self,code=None):
+        plates = self.load()
+        d = {'code': code}
+        if code is None:
+            d['code'] = prompt_for('Code')
+        if d['code'] in [p['code'] for p in plates]:
+            print("There's already a plate under that code. Try \n     > spin edit {}".format(d['code']))
+            return
+
+        d['description'] = prompt_for('Description')
+        d['period_in_days'] = float(prompt_for('Period in days'))
+        last_spun = prompt_for("Last spun [YYYY-MM-DD | Enter for now | 'None' for never]")
+        if last_spun == 'None':
+            d['last_spun'] = None
+            d['spin_history'] = []
+        elif last_spun == '':
+            d['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+            d['spin_history'] = [datetime.strftime(datetime.now(),"%Y-%m-%d")]
+        else:
+            d['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
+            d['spin_history'] = [datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%d")]
+            # The above line seems like it does something and then undoes it, but really it's 
+            # validating that the entered date is in the right format.
+
+        plates.append(d)
+        self.store(plates)
+        print('"{}" was added to the plates being tracked.'.format(d['description']))
+        self.check()
 
     def edit(self,code=None):
         plates = self.load()
