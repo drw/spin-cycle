@@ -137,35 +137,6 @@ def stats():
             p['status']))
     print("=============================================================================\n")
 
-def check(show_all=False):
-    plates = load()
-    wobbly_plates = inspect(plates)
-    if show_all:
-        all_plates_with_lateness = wobbly_plates
-        for p in plates:
-            if p['code'] not in [q['code'] for q in all_plates_with_lateness]:
-                p['cycles_late'] = 0
-                p['last_spun_dt'] = last_spun_dt(p)
-                all_plates_with_lateness.append(p)
-        wobbly_plates = all_plates_with_lateness
-
-    wobbly_ps_sorted = sorted(wobbly_plates, 
-                            key=lambda u: -u['cycles_late'])
-    print("\nPlates by Wobbliness: ")
-    print_table(wobbly_ps_sorted)
-
-    wobbly_ps_by_recency = sorted(wobbly_plates, 
-                            key=lambda u: u['last_spun'])
-    print("\n\nWobbly Plates by Date of Last Spinning: ")
-    print_table(wobbly_ps_by_recency)
-
-
-    coda = "Out of {} plates, {} need{} to be spun.".format(len(plates), len(wobbly_plates), "s" if len(wobbly_plates) == 1 else "")
-    print(textwrap.fill(coda,70))
-
-def all():
-    check(show_all=True)
-
 def intersection(start1,end1,start2,end2):
     start = max(start1,start2)
     end = min(end1,end2)
@@ -242,6 +213,8 @@ def projects(full=False):
             end_dt = datetime.now() # This forces even paused projects to print
             # full bar charts.
 
+        # [ ] Once a paused project is unpaused, it will make sense to
+        # exclude the paused weeks from the non-full bar chart.
         terminator = ender[status]
         score = scorer[status]
         bar = form_bar(project,start_dt,end_dt,terminator)
@@ -481,6 +454,35 @@ class Plates(object):
     def store(self,plates):
         with open(self._filepath,'w') as f:
             f.write(dumps(plates, indent=4))
+
+    def check(self,show_all=False):
+        plates = self.load()
+        wobbly_plates = inspect(plates)
+        if show_all:
+            all_plates_with_lateness = wobbly_plates
+            for p in plates:
+                if p['code'] not in [q['code'] for q in all_plates_with_lateness]:
+                    p['cycles_late'] = 0
+                    p['last_spun_dt'] = last_spun_dt(p)
+                    all_plates_with_lateness.append(p)
+            wobbly_plates = all_plates_with_lateness
+
+        wobbly_ps_sorted = sorted(wobbly_plates, 
+                                key=lambda u: -u['cycles_late'])
+        print("\nPlates by Wobbliness: ")
+        print_table(wobbly_ps_sorted)
+
+        wobbly_ps_by_recency = sorted(wobbly_plates, 
+                                key=lambda u: u['last_spun'])
+        print("\n\nWobbly Plates by Date of Last Spinning: ")
+        print_table(wobbly_ps_by_recency)
+
+
+        coda = "Out of {} plates, {} need{} to be spun.".format(len(plates), len(wobbly_plates), "s" if len(wobbly_plates) == 1 else "")
+        print(textwrap.fill(coda,70))
+
+    def all(self):
+        self.check(show_all=True)
 
     def view(self,code=None):
         plates = self.load()
