@@ -54,20 +54,6 @@ def print_table(ps):
 #with open(PATH+"/plates.json",'w') as f:
 #    f.write(dumps(plates, indent=4))
 
-def load():
-    plates_filepath = PATH+"/"+PLATES_FILE
-    if os.path.exists(plates_filepath):
-        with open(plates_filepath,'r') as f:
-        #    pprint(f.read())
-            plates = loads(f.read())
-        return plates
-    else:
-        return []
-
-def store(plates):
-    with open(PATH+"/"+PLATES_FILE,'w') as f:
-        f.write(dumps(plates, indent=4))
-
 def find_all_racks():
     from os import listdir
     from os.path import isfile, join
