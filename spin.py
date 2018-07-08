@@ -103,40 +103,6 @@ def inspect(plates):
                 wobbly_plates.append(wobbler)
     return wobbly_plates
 
-def stats():
-    plates = load()
-    template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<6}} {{:<6}}"
-    fmt = template.format("{:>9.9}")
-    print(fmt.format("", "", "Total", "Effective", "Period", ""))
-    print(fmt.format("Code","Description","spins", "period","in days", "Status"))
-    print("=============================================================================")
-    for p in plates:
-        total_spins = 0
-        effective_period = ""
-        fmt = template.format("{:9}")
-        if 'spin_history' in p:
-            if p['spin_history'] is not None:
-                spin_history = p['spin_history'] # A list of date_strings
-            else:
-                spin_history = []
-            total_spins = len(spin_history)
-            if total_spins > 0:
-                first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
-                last_date = datetime.strptime(spin_history[-1],'%Y-%m-%d')
-                if total_spins in [0,1]:
-                    effective_period = "None"
-                else:
-                    effective_period = (last_date-first_date).days/(total_spins-1.0)
-                    fmt = template.format("{:>9.1f}")
-        if 'status' not in p or p['status'] is None:
-            p['status'] = 'Active'
-        print(fmt.format(p['code'],p['description'],
-            total_spins, 
-            effective_period,
-            p['period_in_days'],
-            p['status']))
-    print("=============================================================================\n")
-
 def intersection(start1,end1,start2,end2):
     start = max(start1,start2)
     end = min(end1,end2)
@@ -571,6 +537,40 @@ class Plates(object):
         p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
 
         self.store(plates)
+
+    def stats(self):
+        plates = self.load()
+        template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<6}} {{:<6}}"
+        fmt = template.format("{:>9.9}")
+        print(fmt.format("", "", "Total", "Effective", "Period", ""))
+        print(fmt.format("Code","Description","spins", "period","in days", "Status"))
+        print("=============================================================================")
+        for p in plates:
+            total_spins = 0
+            effective_period = ""
+            fmt = template.format("{:9}")
+            if 'spin_history' in p:
+                if p['spin_history'] is not None:
+                    spin_history = p['spin_history'] # A list of date_strings
+                else:
+                    spin_history = []
+                total_spins = len(spin_history)
+                if total_spins > 0:
+                    first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
+                    last_date = datetime.strptime(spin_history[-1],'%Y-%m-%d')
+                    if total_spins in [0,1]:
+                        effective_period = "None"
+                    else:
+                        effective_period = (last_date-first_date).days/(total_spins-1.0)
+                        fmt = template.format("{:>9.1f}")
+            if 'status' not in p or p['status'] is None:
+                p['status'] = 'Active'
+            print(fmt.format(p['code'],p['description'],
+                total_spins, 
+                effective_period,
+                p['period_in_days'],
+                p['status']))
+        print("=============================================================================\n")
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
