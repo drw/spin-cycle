@@ -126,7 +126,7 @@ def spins_in_span(spin_history,span):
 
 def form_bar(p,start_dt,end_dt,terminator):
     unit = timedelta(days = 7)
-    fmt= "{:<11.11}  {:>3}  {:<}{}"
+    fmt = "{:<11.11} {:>3}  {:>3} {:<}{}"
     duration = int((end_dt - start_dt).days/7.0) # in weeks
     #duration_less_one = duration-1 if duration > 0 else 0
     #d_bar = '|' * duration_less_one
@@ -142,7 +142,15 @@ def form_bar(p,start_dt,end_dt,terminator):
 
     if len(d_bar) > 0:
         d_bar = d_bar[:-1]
-    bar = fmt.format(p['code'], duration, d_bar, terminator)
+    n = 2
+    span = timedelta(n*p['period_in_days'])
+    if p['spin_history'] is not None:
+        spin_history = p['spin_history'] # A list of date_strings
+    else:
+        spin_history = []
+    in_last_n_cycles = spins_in_span(spin_history,span)
+
+    bar = fmt.format(p['code'], in_last_n_cycles, duration, d_bar, terminator)
     return bar
 
 def load_pauses(p):
