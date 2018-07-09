@@ -118,6 +118,12 @@ def is_more_in(start,span,ranges):
         cumulative += intersection(start,end,r_start_dt,r_end_dt)
     return cumulative + cumulative > end - start
 
+def spins_in_span(spin_history,span):
+    now = datetime.now()
+    start = now - span
+    in_span = [s for s in spin_history if start <= datetime.strptime(s,"%Y-%m-%d") <= now]
+    return len(in_span)
+
 def form_bar(p,start_dt,end_dt,terminator):
     unit = timedelta(days = 7)
     fmt= "{:<11.11}  {:>3}  {:<}{}"
@@ -386,13 +392,14 @@ class Plates(object):
 
     def stats(self):
         plates = self.load()
-        template = "{{:<11.11}}  {{:<30.30}} {{:<6}}  {}  {{:<7}} {{:<6}}"
+        template = "{{:<11.11}}  {{:<30.30}} {{:<8}}  {}  {{:<7}} {{:<6}}"
         fmt = template.format("{:>9.9}")
         print(fmt.format("", "", "Total", "Effective", "Period", ""))
         print(fmt.format("Code","Description","spins", "period","in days", "Status"))
         print("=============================================================================")
         for p in plates:
             total_spins = 0
+            in_last_n_cycles = 0
             effective_period = ""
             fmt = template.format("{:9}")
             if 'spin_history' in p:
@@ -401,6 +408,9 @@ class Plates(object):
                 else:
                     spin_history = []
                 total_spins = len(spin_history)
+                n = 2
+                span = timedelta(n*p['period_in_days'])
+                in_last_n_cycles = spins_in_span(spin_history,span)
                 if total_spins > 0:
                     first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
                     last_date = datetime.strptime(spin_history[-1],'%Y-%m-%d')
@@ -412,7 +422,7 @@ class Plates(object):
             if 'status' not in p or p['status'] is None:
                 p['status'] = 'Active'
             print(fmt.format(p['code'],p['description'],
-                total_spins, 
+                "{:<} ({})".format(total_spins, in_last_n_cycles),
                 effective_period,
                 p['period_in_days'],
                 p['status']))
