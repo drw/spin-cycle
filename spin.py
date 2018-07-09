@@ -475,17 +475,21 @@ class Plates(object):
 
         sorted_bars = sorted(bars,key = lambda b: scores[b])
 
+        header = """           spins in
+           last 2   project
+code       cycles   duration"""
+        print(header)
         for k,bar in zip(index,sorted_bars):
             print(bar)
 
-        return sorted_bars
+        return sorted_bars, header
 
     def p(self,full=False):
         """A short alias to produce the project-view output."""
         self.projects(full)
 
     def p_watch(self):
-        bars = self.projects()
+        bars, header = self.projects()
         msg = '\n'.join(bars)
         send_to_slack(msg,username='Captain Projecto',channel='@david',icon=':film_projector:')
 
