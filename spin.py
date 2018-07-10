@@ -30,12 +30,13 @@ from notify import send_to_slack
 
 
 def print_table(ps):
-    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {{:<6}} {{:<6}}"
-    fmt = template.format("{:>7.9}")
+    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}}"
+    fmt = template.format("{:>7.8}","{:<6}")
     print(fmt.format("", "", "Cycles", "", "Period", ""))
     print(fmt.format("Code","Description","late", "Last spun","in days", "Status"))
     print("================================================================================")
-    fmt = template.format("{:>7.1f}")
+    fmt = template.format("{:>7.1f}","{:<7.1f}") # The first digit in the float formatting
+    # strings has to be manually tweaked to make everything line up.
     for p in ps:
         if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
             last_spun_date = None
