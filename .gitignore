@@ -1,4 +1,6 @@
+*pyc
 parameters/
 TODO
 NOTES
-*plates.json
+*.json
+*.csv
