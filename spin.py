@@ -497,7 +497,7 @@ code       cycles   duration"""
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        check() # Make this the default.
+        Plates().check() # Make this the default.
     else:
         all_racks = find_all_racks()
         arg1 = sys.argv[1]
