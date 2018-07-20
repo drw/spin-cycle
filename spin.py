@@ -450,29 +450,30 @@ class Plates(object):
         index = []
         scores = {}
         for k,project in enumerate(ps):
-            start = project['spin_history'][0] # e.g., "2018-02-02"
-            start_dt = datetime.strptime(start, "%Y-%m-%d")
-            if 'status' not in project:
-                status = 'Active'
-            else:
-                status = project['status']
-            if status in ['Active']:
-                end_dt = datetime.now()
-            else:
-                end = project['spin_history'][-1] # e.g., "2018-10-10"
-                end_dt = datetime.strptime(end, "%Y-%m-%d")
-            if full and status == 'Paused':
-                end_dt = datetime.now() # This forces even paused projects to print
-                # full bar charts.
+            if 'spin_history' in project:
+                start = project['spin_history'][0] # e.g., "2018-02-02"
+                start_dt = datetime.strptime(start, "%Y-%m-%d")
+                if 'status' not in project:
+                    status = 'Active'
+                else:
+                    status = project['status']
+                if status in ['Active']:
+                    end_dt = datetime.now()
+                else:
+                    end = project['spin_history'][-1] # e.g., "2018-10-10"
+                    end_dt = datetime.strptime(end, "%Y-%m-%d")
+                if full and status == 'Paused':
+                    end_dt = datetime.now() # This forces even paused projects to print
+                    # full bar charts.
 
-            # [ ] Once a paused project is unpaused, it will make sense to
-            # exclude the paused weeks from the non-full bar chart.
-            terminator = ender[status]
-            score = scorer[status]
-            bar = form_bar(project,start_dt,end_dt,terminator)
-            bars.append(bar)
-            index.append(k)
-            scores[bar] = score
+                # [ ] Once a paused project is unpaused, it will make sense to
+                # exclude the paused weeks from the non-full bar chart.
+                terminator = ender[status]
+                score = scorer[status]
+                bar = form_bar(project,start_dt,end_dt,terminator)
+                bars.append(bar)
+                index.append(k)
+                scores[bar] = score
 
         sorted_bars = sorted(bars,key = lambda b: scores[b])
 
