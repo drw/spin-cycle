@@ -18,7 +18,7 @@
 # > spin add pi
 
 
-import os, sys, requests, textwrap
+import os, sys, re, requests, textwrap
 import fire
 
 from datetime import datetime, timedelta
@@ -315,8 +315,14 @@ class Plates(object):
             code = prompt_for('Code')
         codes = [p['code'] for p in plates]
         if code not in codes:
-            print("There's no plate under that code. Try \n     > spin add {}".format(code))
-            return
+            # Try matching by partial substring
+            partial_matches = [c for c in codes if re.match(code,c) is not None]
+            if len(partial_matches) == 1:
+                code = partial_matches[0]
+                print("Spinning {}.".format(code))
+            else:
+                print("There's no plate under that code. Try \n     > spin add {}".format(code))
+                return
 
         # Find the corresponding plate to spin.
         index = codes.index(code)
