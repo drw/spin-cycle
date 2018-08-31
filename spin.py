@@ -309,7 +309,7 @@ class Plates(object):
         print('"{}" has been edited.'.format(p['description']))
         self.check()
 
-    def spin(self,code=None):
+    def spin(self,code=None,days_ago=None):
         plates = self.load()
         if code is None:
             code = prompt_for('Code')
@@ -327,8 +327,14 @@ class Plates(object):
         # Find the corresponding plate to spin.
         index = codes.index(code)
         p = plates[index]
+        
+        if days_ago is None:
+            dt_spun = datetime.now()
+        else:
+            dt_spun = datetime.now() - timedelta(days=int(days_ago))
 
-        today = datetime.strftime(datetime.now(),"%Y-%m-%d")
+        date_spun = datetime.strftime(dt_spun,"%Y-%m-%d")
+
         if 'spin_history' in p:
             # Load spin history from file.
             if p['spin_history'] is None:
@@ -338,18 +344,18 @@ class Plates(object):
             if spin_history == [] and p['last_spun'] is not None:
                 last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
                 last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
-                spin_history = [last_spun_string,today]
+                spin_history = [last_spun_string,date_spun]
             else:
-                spin_history.append(today)
+                spin_history.append(date_spun)
             p['spin_history'] = spin_history
         elif p['last_spun'] is not None:
             last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
             last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
-            spin_history = [last_spun_string,today]
+            spin_history = [last_spun_string,date_spun]
             p['spin_history'] = spin_history
         else:
-            p['spin_history'] = [today]
-        p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+            p['spin_history'] = [date_spun]
+        p['last_spun'] = datetime.strftime(dt_spun,"%Y-%m-%dT%H:%M:%S.%f")
 
         self.store(plates)
 
