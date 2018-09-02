@@ -331,6 +331,8 @@ class Plates(object):
             else:
                 print("There's no plate under that code. Try \n     > spin add {}".format(code))
                 return
+        else:
+            print("Spinning {}.".format(code))
 
         # Find the corresponding plate to spin.
         index = codes.index(code)
