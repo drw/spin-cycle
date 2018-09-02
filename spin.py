@@ -20,6 +20,7 @@
 
 import os, sys, re, requests, textwrap
 import fire
+from math import exp
 
 from datetime import datetime, timedelta
 from pprint import pprint
@@ -27,15 +28,20 @@ from json import loads, dumps
 from parameters.local_parameters import PATH, PLATES_FILE
 from notify import send_to_slack
 
-
+def calculate_angular_momentum(p):
+    spins = p['spin_history']
+    period = p['period_in_days']
+    today = datetime.now().date()
+    L = sum([ exp( -(today-datetime.strptime(date_i,"%Y-%m-%d").date()).days/period ) for date_i in spins])
+    return L
 
 def print_table(ps):
-    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}}"
-    fmt = template.format("{:>7.8}","{:<6}")
-    print(fmt.format("", "", "Cycles", "", "Period", ""))
-    print(fmt.format("Code","Description","late", "Last spun","in days", "Status"))
-    print("================================================================================")
-    fmt = template.format("{:>7.1f}","{:<7.1f}") # The first digit in the float formatting
+    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {}"
+    fmt = template.format("{:>7.8}","{:<6}","{:<3}")
+    print(fmt.format("", "", "Cycles", "", "Period", "", ""))
+    print(fmt.format("Code","Description","late", "Last spun","in days", "Status", "L"))
+    print("=====================================================================================")
+    fmt = template.format("{:>7.1f}","{:<7.1f}","{:<3.1f}") # The first digit in the float formatting
     # strings has to be manually tweaked to make everything line up.
     for p in ps:
         if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
@@ -46,8 +52,9 @@ def print_table(ps):
             p['status'] = 'Active'
         print(fmt.format(p['code'],p['description'],
             p['cycles_late'], last_spun_date,
-            p['period_in_days'],p['status']))
-    print("================================================================================\n")
+            p['period_in_days'],p['status'],
+            p['angular_momentum']))
+    print("=====================================================================================\n")
 
 #plates = {"trash": {"period_in_days": 3, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, "pi": {"period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } }
 #plates = [{"code": "trash", "period_in_days": 7, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, {"code": "pi", "period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } ]
@@ -75,6 +82,7 @@ def last_spun_dt(plate):
 def inspect(plates):
     wobbly_plates = []
     for i,plate in enumerate(plates):
+        plate['angular_momentum'] = calculate_angular_momentum(plate)
         if is_spinning(plate):
             period_in_days = timedelta(days = plate['period_in_days']) 
             last_spun = last_spun_dt(plate)
