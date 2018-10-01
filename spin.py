@@ -258,7 +258,7 @@ class Plates(object):
         plates = self.load()
         d = {'code': code}
         if code is None:
-            d['code'] = prompt_for('Code')
+            d['code'] = str(prompt_for('Code'))
         if d['code'] in [p['code'] for p in plates]:
             print("There's already a plate under that code. Try \n     > spin edit {}".format(d['code']))
             return
