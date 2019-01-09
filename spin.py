@@ -324,7 +324,7 @@ class Plates(object):
         codes = [p['code'] for p in plates]
         if code not in codes:
             # Try matching by partial substring
-            partial_matches = [c for c in codes if re.match(code,c) is not None]
+            partial_matches = [c for c in codes if re.match(str(code),c) is not None]
             if len(partial_matches) == 1:
                 code = partial_matches[0]
                 print("Spinning {}.".format(code))
