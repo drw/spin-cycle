@@ -23,6 +23,7 @@ import fire
 from math import exp
 
 from datetime import datetime, timedelta
+from dateutil import parser
 from pprint import pprint
 from json import loads, dumps
 from parameters.local_parameters import PATH, PLATES_FILE
@@ -34,6 +35,24 @@ def calculate_angular_momentum(p):
     today = datetime.now().date()
     L = sum([ exp( -(today-datetime.strptime(date_i,"%Y-%m-%d").date()).days/period ) for date_i in spins])
     return L
+
+def spins_in_range(p, start_date, end_date):
+    # This function is kind of a superset of spins_in_span().
+    count = 0
+    for spin in p['spin_history']:
+        if start_date <= parser.parse(spin).date() <= end_date:
+            count += 1
+    return count
+
+def calculate_streak(p):
+    spins = p['spin_history']
+    period = p['period_in_days']
+    end = datetime.now().date()
+    streak = 0
+    while spins_in_range(p, end - timedelta(days=period), end) > 0:
+        streak += 1
+        end -= timedelta(days=period)
+    return streak
 
 def print_table(ps):
     template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {}"
