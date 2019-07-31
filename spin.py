@@ -472,7 +472,7 @@ class Plates(object):
         index = []
         scores = {}
         for k,project in enumerate(ps):
-            if 'spin_history' in project:
+            if 'spin_history' in project and len(project['spin_history']) > 0:
                 start = project['spin_history'][0] # e.g., "2018-02-02"
                 start_dt = datetime.strptime(start, "%Y-%m-%d")
                 if 'status' not in project:
