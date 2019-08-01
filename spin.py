@@ -265,13 +265,13 @@ class Plates(object):
             print("You have to specify the code of an existing plate to view.")
             print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
             code = prompt_for('Enter the code')
-        codes = [p['code'] for p in plates]
-        while code not in codes:
+        plate_codes = [p['code'] for p in plates]
+        while code not in plate_codes:
             print("There's no plate under that code. Try again.")
             print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
             code = prompt_for('Enter the code of the plate you want to edit')
 
-        index = codes.index(code)
+        index = plate_codes.index(code)
         p = plates[index]
         pprint(p)
 
@@ -310,13 +310,13 @@ class Plates(object):
             print("You have to specify the code of an existing plate to edit.")
             print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
             code = prompt_for('Enter the code')
-        codes = [p['code'] for p in plates]
-        while code not in codes:
+        plate_codes = [p['code'] for p in plates]
+        while code not in plate_codes:
             print("There's no plate under that code. Try again.")
             print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
             code = prompt_for('Enter the code of the plate you want to edit')
 
-        index = codes.index(code)
+        index = plate_codes.index(code)
         p = plates[index]
         p['description'] = prompt_to_edit_field(p,'Description','description')
         p['period_in_days'] = float(prompt_to_edit_field(p,'Period in days','period_in_days'))
@@ -342,10 +342,10 @@ class Plates(object):
         plates = self.load()
         if code is None:
             code = prompt_for('Code')
-        codes = [p['code'] for p in plates]
-        if code not in codes:
+        plate_codes = [p['code'] for p in plates]
+        if code not in plate_codes:
             # Try matching by partial substring
-            partial_matches = [c for c in codes if re.match(str(code),c) is not None]
+            partial_matches = [c for c in plate_codes if re.match(str(code),c) is not None]
             if len(partial_matches) == 1:
                 code = partial_matches[0]
                 print("Spinning {}.".format(code))
@@ -356,7 +356,7 @@ class Plates(object):
             print("Spinning {}.".format(code))
 
         # Find the corresponding plate to spin.
-        index = codes.index(code)
+        index = plate_codes.index(code)
         p = plates[index]
         
         if days_ago is None:
@@ -397,13 +397,13 @@ class Plates(object):
         plates = self.load()
         if code is None:
             code = prompt_for('Code')
-        codes = [p['code'] for p in plates]
-        if code not in codes:
+        plate_codes = [p['code'] for p in plates]
+        if code not in plate_codes:
             print("There's no plate under that code. Try \n     > spin add {}".format(code))
             return
 
         # Find the corresponding plate to spin.
-        index = codes.index(code)
+        index = plate_codes.index(code)
         p = plates[index]
 
         today = datetime.strftime(datetime.now(),"%Y-%m-%d")
