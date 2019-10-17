@@ -64,7 +64,7 @@ def print_table(ps):
     # strings has to be manually tweaked to make everything line up.
     for p in ps:
         if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
-            last_spun_date = None
+            last_spun_date = ''
         else:
             last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
         if 'status' not in p or p['status'] is None:
