@@ -29,6 +29,12 @@ from json import loads, dumps
 from parameters.local_parameters import PATH, PLATES_FILE
 from notify import send_to_slack
 
+def coerce_nulls_to_blanks(wobbly_plates, field):
+    for plate in wobbly_plates:
+        if field in plate:
+            if plate[field] is None:
+                plate[field] = ''
+
 def calculate_angular_momentum(p):
     spins = p['spin_history']
     period = p['period_in_days']
@@ -241,6 +247,9 @@ class Plates(object):
                     p['last_spun_dt'] = last_spun_dt(p)
                     all_plates_with_lateness.append(p)
             wobbly_plates = all_plates_with_lateness
+
+        coerce_nulls_to_blanks(wobbly_plates, 'last_spun') # A hack to address the difficulty of sorting wobbly_plates by recency with None values.
+        # [ ] It might be better to just fix the sorting or switch away from using None values in storing the data.
 
         wobbly_ps_sorted = sorted(wobbly_plates, 
                                 key=lambda u: -u['cycles_late'])
