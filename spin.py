@@ -25,6 +25,7 @@ from math import exp
 from datetime import datetime, timedelta
 from dateutil import parser
 from pprint import pprint
+from icecream import ic
 from json import loads, dumps
 from parameters.local_parameters import PATH, PLATES_FILE
 from notify import send_to_slack
@@ -60,12 +61,27 @@ def calculate_streak(p):
         end -= timedelta(days=period)
     return streak
 
+def character(count):
+    if count == 0:
+        return ' '
+    elif count < 10:
+        return str(count)
+    elif count < 36:
+        return chr(count - 10 + ord('a'))
+    elif count < 36 + 26:
+        return chr(count - 36 + ord('A'))
+    else: # Overflow error
+        return ("#")
+
+def serialize_spin_counts(spins):
+    return ''.join([character(count) for count in spins])
+
 def print_table(ps):
-    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {} {{:>6}}"
+    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {} {{:>6}} {{}}"
     fmt = template.format("{:>7.8}","{:<6}","{:<3}")
-    print(fmt.format("", "", "Cycles", "", "Period", "", "", ""))
-    print(fmt.format("Code","Description","late", "Last spun","in days", "Status", "L", "Streak"))
-    print("============================================================================================")
+    print(fmt.format("", "", "Cycles", "", "Period", "", "", "", ""))
+    print(fmt.format("Code","Description","late", "Last spun","in days", "Status", "L", "Streak", "Spins by cycle"))
+    print("===========================================================================================================================")
     fmt = template.format("{:>7.1f}","{:<7.1f}","{:<3.1f}") # The first digit in the float formatting
     # strings has to be manually tweaked to make everything line up.
     for p in ps:
@@ -79,8 +95,9 @@ def print_table(ps):
             p['cycles_late'], last_spun_date,
             p['period_in_days'],p['status'],
             p['angular_momentum'],
-            p['streak']))
-    print("============================================================================================\n")
+            p['streak'],
+            serialize_spin_counts(p['spins_by_cycle'])))
+    print("===========================================================================================================================\n")
 
 #plates = {"trash": {"period_in_days": 3, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, "pi": {"period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } }
 #plates = [{"code": "trash", "period_in_days": 7, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, {"code": "pi", "period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } ]
@@ -110,6 +127,7 @@ def inspect(plates):
     for i,plate in enumerate(plates):
         plate['angular_momentum'] = calculate_angular_momentum(plate)
         plate['streak'] = calculate_streak(plate)
+        plate['spins_by_cycle'] = spins_by_cycle(plate['spin_history'], timedelta(days = 30*plate['period_in_days']), plate['period_in_days'])
         if is_spinning(plate):
             period_in_days = timedelta(days = plate['period_in_days']) 
             last_spun = last_spun_dt(plate)
@@ -159,6 +177,19 @@ def spins_in_span(spin_history,span):
     start = now - span
     in_span = [s for s in spin_history if start <= datetime.strptime(s,"%Y-%m-%d") <= now]
     return len(in_span)
+
+def spins_by_cycle(spin_history,span,cycle_length):
+    now = datetime.now()
+    cycle_end = now
+    cycle_start = cycle_end - timedelta(days=cycle_length)
+    spins = []
+    while cycle_start > now - span:
+        in_cycle = [s for s in spin_history if cycle_start <= datetime.strptime(s,"%Y-%m-%d") <= cycle_end] # This is
+        # NOT an efficient way of dividing the spins among the spin bins.
+        spins = [len(in_cycle)] + spins
+        cycle_end = cycle_start + timedelta(days=0)
+        cycle_start = cycle_end - timedelta(days=cycle_length)
+    return spins
 
 def form_bar(p,start_dt,end_dt,terminator):
     unit = timedelta(days = 7)
