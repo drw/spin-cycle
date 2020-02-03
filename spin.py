@@ -61,6 +61,17 @@ def calculate_streak(p):
         end -= timedelta(days=period)
     return streak
 
+def calculate_spins_per_cycle(p):
+    spins = p['spin_history']
+    if len(spins) == 0:
+        return 0.0000000
+    first_date = min(spins)
+    end = datetime.now().date()
+    total_days = end - parser.parse(first_date).date()
+    period = p['period_in_days']
+    cycles = total_days.days/period
+    return len(spins)/cycles
+
 def character(count):
     if count == 0:
         return ' '
@@ -77,12 +88,12 @@ def serialize_spin_counts(spins):
     return ''.join([character(count) for count in spins])
 
 def print_table(ps):
-    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {} {{:>6}} {{}}"
-    fmt = template.format("{:>7.8}","{:<6}","{:<3}")
-    print(fmt.format("", "", "Cycles", "", "Period", "", "", "", ""))
-    print(fmt.format("Code","Description","late", "Last spun","in days", "Status", "L", "Streak", "Spins by cycle"))
-    print("===========================================================================================================================")
-    fmt = template.format("{:>7.1f}","{:<7.1f}","{:<3.1f}") # The first digit in the float formatting
+    template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {} {{:>6}} {} {{}}"
+    fmt = template.format("{:>7.8}","{:<6}","{:<3}", "{:>5}") # Formatting for headers for float columns
+    print(fmt.format("", "", "Cycles", "", "Period", "", "", "", "Per", ""))
+    print(fmt.format("Code","Description","late", "Last spun","in days", "Status", "L", "Streak", "cycle", "Spins by cycle"))
+    print("=================================================================================================================================")
+    fmt = template.format("{:>7.1f}","{:<7.1f}","{:<3.1f}", "{:>5.1f}") # The first digit in the float formatting
     # strings has to be manually tweaked to make everything line up.
     for p in ps:
         if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
@@ -96,8 +107,9 @@ def print_table(ps):
             p['period_in_days'],p['status'],
             p['angular_momentum'],
             p['streak'],
+            p['average_spins'],
             serialize_spin_counts(p['spins_by_cycle'])))
-    print("===========================================================================================================================\n")
+    print("=================================================================================================================================\n")
 
 #plates = {"trash": {"period_in_days": 3, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, "pi": {"period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } }
 #plates = [{"code": "trash", "period_in_days": 7, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, {"code": "pi", "period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } ]
@@ -127,6 +139,7 @@ def inspect(plates):
     for i,plate in enumerate(plates):
         plate['angular_momentum'] = calculate_angular_momentum(plate)
         plate['streak'] = calculate_streak(plate)
+        plate['average_spins'] = calculate_spins_per_cycle(plate)
         plate['spins_by_cycle'] = spins_by_cycle(plate['spin_history'], timedelta(days = 30*plate['period_in_days']), plate['period_in_days'])
         if is_spinning(plate):
             period_in_days = timedelta(days = plate['period_in_days']) 
