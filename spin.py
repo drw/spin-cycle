@@ -70,8 +70,8 @@ def calculate_spins_per_cycle(p):
     total_days = end - parser.parse(first_date).date()
     period = p['period_in_days']
     cycles = total_days.days/period
-    if cycles == 0:
-        cycles = 1/period
+    if cycles < 1:
+        cycles = 1
     return len(spins)/cycles
 
 def character(count):
