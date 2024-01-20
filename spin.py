@@ -24,6 +24,7 @@ from math import exp
 
 from datetime import datetime, timedelta
 from dateutil import parser
+from collections import defaultdict
 from pprint import pprint
 from icecream import ic
 from json import loads, dumps
@@ -330,6 +331,23 @@ class Plates(object):
 
     def all(self):
         self.check(show_all=True)
+
+    def total(self, aggregate_by='month'):
+        assert aggregate_by == 'month'
+        plates = self.load()
+        #for days_ago in range(0,30):
+        history = []
+        for p in plates:
+            history += p['spin_history']
+
+        totals_by_month = defaultdict(int)
+        for d in history:
+            totals_by_month[d[:7]] += 1
+        pprint(totals_by_month)
+
+    def total_by_year(self):
+        aggregate_by = 'year'
+        self.total(aggregate_by = 'year')
 
     def view(self,code=None):
         plates = self.load()
