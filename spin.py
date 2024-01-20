@@ -27,8 +27,25 @@ from dateutil import parser
 from pprint import pprint
 from icecream import ic
 from json import loads, dumps
-from parameters.local_parameters import PATH, PLATES_FILE
+from parameters.local_parameters import PLATES_FILE
 from notify import send_to_slack
+
+def fib(n): return 1 if n in {0, 1} else fib(n-1) + fib(n-2)
+
+
+def module_path(local_function):
+   '''Returns the module path without the use of __file__.  Requires a function defined
+   locally in the module.
+   from http://stackoverflow.com/questions/729583/getting-file-path-of-imported-module'''
+   # This function can be used to eliminate the need to define BASE_DIR in
+   # parameters.local_parameters.py
+   import inspect, os
+   return os.path.abspath(inspect.getsourcefile(local_function))
+
+try:
+    PATH = '/'.join(module_path(fib).split('/')[:-1])
+except ModuleNotFoundError:
+    from parameters.local_parameters import PATH
 
 def coerce_nulls_to_blanks(wobbly_plates, field):
     for plate in wobbly_plates:
