@@ -404,6 +404,9 @@ class Plates(object):
             if len(partial_matches) == 1:
                 code = partial_matches[0]
                 print("Spinning {}.".format(code))
+            elif len(partial_matches) > 1:
+                print(f'Try again with a code that disambiguates the following options: {", ".join(partial_matches)}')
+                return
             else:
                 print("There's no plate under that code. Try \n     > spin add {}".format(code))
                 return
