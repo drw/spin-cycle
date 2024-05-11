@@ -112,7 +112,7 @@ def print_table(ps):
     fmt = template.format("{:>7.8}","{:<6}","{:<3}", "{:>5}") # Formatting for headers for float columns
     print(fmt.format("", "", "Cycles", "", "Period", "", "", "", "Per", ""))
     print(fmt.format("Code","Description","late", "Last spun","in days", "Status", "L", "Streak", "cycle", "Spins by cycle"))
-    print("=================================================================================================================================")
+    print("======================================================================================================================================")
     fmt = template.format("{:>7.1f}","{:<7.1f}","{:<3.1f}", "{:>5.1f}") # The first digit in the float formatting
     # strings has to be manually tweaked to make everything line up.
     for p in ps:
@@ -129,7 +129,7 @@ def print_table(ps):
             p['streak'],
             p['average_spins'],
             serialize_spin_counts(p['spins_by_cycle'])))
-    print("=================================================================================================================================\n")
+    print("======================================================================================================================================\n")
 
 #plates = {"trash": {"period_in_days": 3, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, "pi": {"period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } }
 #plates = [{"code": "trash", "period_in_days": 7, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, {"code": "pi", "period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } ]
@@ -333,17 +333,22 @@ class Plates(object):
         self.check(show_all=True)
 
     def total(self, aggregate_by='month'):
-        assert aggregate_by == 'month'
         plates = self.load()
         #for days_ago in range(0,30):
         history = []
         for p in plates:
             history += p['spin_history']
 
-        totals_by_month = defaultdict(int)
+        totals_by = defaultdict(int)
         for d in history:
-            totals_by_month[d[:7]] += 1
-        pprint(totals_by_month)
+            if aggregate_by == 'month':
+                term = d[:7]
+            elif aggregate_by == 'year':
+                term = d[:4]
+            else:
+                raise ValueError(f'No idea how to aggregate by {term}.')
+            totals_by[term] += 1
+        pprint(totals_by)
 
     def total_by_year(self):
         aggregate_by = 'year'
@@ -537,7 +542,7 @@ class Plates(object):
 
     def stats(self):
         plates = self.load()
-        template = "{{:<11.11}}  {{:<30.30}} {{:<8}}  {}  {{:<7}} {{:<6}}"
+        template = "{{:<11.11}}  {{:<35.35}} {{:<8}}  {}  {{:<7}} {{:<6}}"
         fmt = template.format("{:>9.9}")
         print(fmt.format("", "", "Total", "Effective", "Period", ""))
         print(fmt.format("Code","Description","spins", "period","in days", "Status"))
