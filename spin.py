@@ -541,13 +541,14 @@ class Plates(object):
         self.shelve(code,shelving_mode='Done')
 
     def stats(self):
-        plates = self.load()
+        unsorted_plates = self.load()
         template = "{{:<11.11}}  {{:<35.35}} {{:<8}}  {}  {{:<7}} {{:<6}}"
         fmt = template.format("{:>9.9}")
         print(fmt.format("", "", "Total", "Effective", "Period", ""))
         print(fmt.format("Code","Description","spins", "period","in days", "Status"))
         print("=============================================================================")
-        for p in plates:
+        plates = []
+        for p in unsorted_plates:
             total_spins = 0
             in_last_n_cycles = 0
             effective_period = ""
@@ -570,11 +571,22 @@ class Plates(object):
                         #effective_period = (last_datetime-first_datetime).days/(total_spins-1.0)
                         effective_period = (datetime.now() - first_datetime).days/(total_spins - 1.0)
                         fmt = template.format("{:>9.1f}")
+                plate = {'status': p.get('status', 'Active'),
+                        'fmt': fmt,
+                        'code': p['code'],
+                        'span': span,
+                        'total_spins': total_spins,
+                        'in_last_n_cycles': in_last_n_cycles,
+                        'description': p['description'],
+                        'period_in_days': p['period_in_days'],
+                        'effective_period': effective_period}
+                plates.append(plate)
+        for p in sorted(plates, key=lambda k: k['effective_period'] if k['effective_period'] not in ['', 'None'] else 99999, reverse=True):
             if 'status' not in p or p['status'] is None:
                 p['status'] = 'Active'
-            print(fmt.format(p['code'],p['description'],
-                "{:<} ({})".format(total_spins, in_last_n_cycles),
-                effective_period,
+            print(p['fmt'].format(p['code'], p['description'],
+                "{:<} ({})".format(p['total_spins'], p['in_last_n_cycles']),
+                p['effective_period'],
                 p['period_in_days'],
                 p['status']))
         print("=============================================================================\n")
