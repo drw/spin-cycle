@@ -562,12 +562,13 @@ class Plates(object):
                 span = timedelta(n*p['period_in_days'])
                 in_last_n_cycles = spins_in_span(spin_history,span)
                 if total_spins > 0:
-                    first_date = datetime.strptime(spin_history[0],'%Y-%m-%d')
-                    last_date = datetime.strptime(spin_history[-1],'%Y-%m-%d')
+                    first_datetime = datetime.strptime(spin_history[0],'%Y-%m-%d')
+                    last_datetime = datetime.strptime(spin_history[-1],'%Y-%m-%d')
                     if total_spins in [0,1]:
                         effective_period = "None"
                     else:
-                        effective_period = (last_date-first_date).days/(total_spins-1.0)
+                        #effective_period = (last_datetime-first_datetime).days/(total_spins-1.0)
+                        effective_period = (datetime.now() - first_datetime).days/(total_spins - 1.0)
                         fmt = template.format("{:>9.1f}")
             if 'status' not in p or p['status'] is None:
                 p['status'] = 'Active'
