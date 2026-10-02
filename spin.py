@@ -142,7 +142,7 @@ def find_all_racks():
     from os.path import isfile, join
     import re
     onlyfiles = [f for f in listdir(PATH) if isfile(join(PATH, f))]
-    return [re.sub("\.json","",f) for f in onlyfiles if re.search("json$",f)]
+    return [re.sub(r"\.json", "", f) for f in onlyfiles if re.search(r"json$", f)]
 
 def is_spinning(plate):
     return 'status' not in plate or plate['status'] == 'Active'
