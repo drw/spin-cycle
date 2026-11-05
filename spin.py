@@ -47,13 +47,13 @@ try:
 except ModuleNotFoundError:
     from parameters.local_parameters import PATH
 
-def coerce_nulls_to_blanks(wobbly_plates, field):
+def coerce_nulls_to_blanks(wobbly_plates: list[dict], field: str) -> None:
     for plate in wobbly_plates:
         if field in plate:
             if plate[field] is None:
                 plate[field] = ''
 
-def calculate_angular_momentum(p):
+def calculate_angular_momentum(p: dict) -> float:
     spins = p['spin_history']
     period = p['period_in_days']
     today = datetime.now().date()
@@ -62,7 +62,7 @@ def calculate_angular_momentum(p):
     L = sum([exp(-1 * day_diff(date_i)/period) for date_i in spins])
     return L
 
-def spins_in_range(p, start_date, end_date):
+def spins_in_range(p: dict, start_date, end_date) -> int:
     # This function is kind of a superset of spins_in_span().
     count = 0
     for spin in p['spin_history']:
@@ -70,7 +70,7 @@ def spins_in_range(p, start_date, end_date):
             count += 1
     return count
 
-def calculate_streak(p):
+def calculate_streak(p: dict) -> int:
     spins = p['spin_history']
     period = p['period_in_days']
     end = datetime.now().date()
@@ -80,7 +80,7 @@ def calculate_streak(p):
         end -= timedelta(days=period)
     return streak
 
-def calculate_spins_per_cycle(p):
+def calculate_spins_per_cycle(p: dict) -> float:
     spins = p['spin_history']
     if len(spins) == 0:
         return 0.0000000
@@ -93,7 +93,7 @@ def calculate_spins_per_cycle(p):
         cycles = 1
     return len(spins)/cycles
 
-def character(count):
+def character(count: int) -> str:
     if count == 0:
         return ' '
     elif count < 10:
@@ -105,7 +105,7 @@ def character(count):
     else: # Overflow error
         return ("#")
 
-def serialize_spin_counts(spins):
+def serialize_spin_counts(spins: list[int]) -> str:
     return ''.join([character(count) for count in spins])
 
 def print_table(ps):
@@ -138,24 +138,24 @@ def print_table(ps):
 #with open(PATH+"/plates.json",'w') as f:
 #    f.write(dumps(plates, indent=4))
 
-def find_all_racks():
+def find_all_racks() -> list[str]:
     from os import listdir
     from os.path import isfile, join
     import re
     onlyfiles = [f for f in listdir(PATH) if isfile(join(PATH, f))]
     return [re.sub(r"\.json", "", f) for f in onlyfiles if re.search(r"json$", f)]
 
-def is_spinning(plate):
+def is_spinning(plate: dict) -> bool:
     return 'status' not in plate or plate['status'] == 'Active'
 
-def last_spun_dt(plate):
+def last_spun_dt(plate: dict) -> datetime.date:
     if plate['last_spun'] is None:
         last_spun = None
     else:
         last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f")
     return last_spun
 
-def inspect(plates):
+def inspect(plates: list[dict]) -> list[dict]:
     wobbly_plates = []
     for i,plate in enumerate(plates):
         plate['angular_momentum'] = calculate_angular_momentum(plate)
