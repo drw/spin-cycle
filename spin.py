@@ -2,7 +2,7 @@
 # and its desired periodicity and shows tasks when they need to be
 # done again.
 
-# Much of the initial approach for this command-line tool was 
+# Much of the initial approach for this command-line tool was
 # taken from pocket-watch/glance.py.
 
 # Usage:
@@ -35,11 +35,10 @@ def fib(n): return 1 if n in {0, 1} else fib(n-1) + fib(n-2)
 
 
 def module_path(local_function):
-   '''Returns the module path without the use of __file__.  Requires a function defined
-   locally in the module.
-   from http://stackoverflow.com/questions/729583/getting-file-path-of-imported-module'''
-   # This function can be used to eliminate the need to define BASE_DIR in
-   # parameters.local_parameters.py
+   """Returns the module path without the use of __file__.  Requires a function
+   defined locally in the module. - from
+   http://stackoverflow.com/questions/729583/getting-file-path-of-imported-module
+   """
    import inspect, os
    return os.path.abspath(inspect.getsourcefile(local_function))
 
@@ -58,7 +57,9 @@ def calculate_angular_momentum(p):
     spins = p['spin_history']
     period = p['period_in_days']
     today = datetime.now().date()
-    L = sum([ exp( -(today-datetime.strptime(date_i,"%Y-%m-%d").date()).days/period ) for date_i in spins])
+    def day_diff(date_i):
+        return (today - datetime.strptime(date_i, '%Y-%m-%d').date()).days
+    L = sum([exp(-1 * day_diff(date_i)/period) for date_i in spins])
     return L
 
 def spins_in_range(p, start_date, end_date):
@@ -162,7 +163,7 @@ def inspect(plates):
         plate['average_spins'] = calculate_spins_per_cycle(plate)
         plate['spins_by_cycle'] = spins_by_cycle(plate['spin_history'], timedelta(days = 30*plate['period_in_days']), plate['period_in_days'])
         if is_spinning(plate):
-            period_in_days = timedelta(days = plate['period_in_days']) 
+            period_in_days = timedelta(days = plate['period_in_days'])
             last_spun = last_spun_dt(plate)
             if last_spun is None or last_spun + period_in_days < datetime.now():
                 print("{} is overdue.".format(plate["code"]))
@@ -315,12 +316,12 @@ class Plates(object):
         coerce_nulls_to_blanks(wobbly_plates, 'last_spun') # A hack to address the difficulty of sorting wobbly_plates by recency with None values.
         # [ ] It might be better to just fix the sorting or switch away from using None values in storing the data.
 
-        wobbly_ps_sorted = sorted(wobbly_plates, 
+        wobbly_ps_sorted = sorted(wobbly_plates,
                                 key=lambda u: -u['cycles_late'])
         print("\nPlates by Wobbliness: ")
         print_table(wobbly_ps_sorted)
 
-        wobbly_ps_by_recency = sorted(wobbly_plates, 
+        wobbly_ps_by_recency = sorted(wobbly_plates,
                                 key=lambda u: u['last_spun'])
         print("\n\nWobbly Plates by Date of Last Spinning: ")
         print_table(wobbly_ps_by_recency)
@@ -391,7 +392,7 @@ class Plates(object):
         else:
             d['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
             d['spin_history'] = [datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%d")]
-            # The above line seems like it does something and then undoes it, but really it's 
+            # The above line seems like it does something and then undoes it, but really it's
             # validating that the entered date is in the right format.
 
         plates.append(d)
@@ -456,7 +457,7 @@ class Plates(object):
         # Find the corresponding plate to spin.
         index = plate_codes.index(code)
         p = plates[index]
-        
+
         if days_ago is None:
             dt_spun = datetime.now()
         else:
@@ -529,16 +530,16 @@ class Plates(object):
 
         p['status'] = shelving_mode
         self.store(plates)
-        print('Put the {} plate ("{}") on the shelf with mode {}.'.format(p['code'],p['description'], shelving_mode))
+        print(f'Put the {p['code']} plate ("{p['description']}") on the shelf with mode {shelving_mode}.')
 
     def pause(self,code=None):
-        self.shelve(code,shelving_mode='Paused')
+        self.shelve(code, shelving_mode='Paused')
 
     def unpause(self,code=None):
-        self.shelve(code,shelving_mode='Active')
+        self.shelve(code, shelving_mode='Active')
 
-    def done(self,code=None):
-        self.shelve(code,shelving_mode='Done')
+    def done(self, code=None):
+        self.shelve(code, shelving_mode='Done')
 
     def stats(self):
         unsorted_plates = self.load()
@@ -546,12 +547,12 @@ class Plates(object):
         fmt = template.format("{:>9.9}")
         print(fmt.format("", "", "Total", "Effective", "Period", ""))
         print(fmt.format("Code","Description","spins", "period","in days", "Status"))
-        print("=============================================================================")
+        print('=' * 76)
         plates = []
         for p in unsorted_plates:
             total_spins = 0
             in_last_n_cycles = 0
-            effective_period = ""
+            effective_period = ''
             fmt = template.format("{:9}")
             if 'spin_history' in p:
                 if p['spin_history'] is not None:
@@ -585,11 +586,11 @@ class Plates(object):
             if 'status' not in p or p['status'] is None:
                 p['status'] = 'Active'
             print(p['fmt'].format(p['code'], p['description'],
-                "{:<} ({})".format(p['total_spins'], p['in_last_n_cycles']),
+                f'{p['total_spins']:<} ({p['in_last_n_cycles']})',
                 p['effective_period'],
                 p['period_in_days'],
                 p['status']))
-        print("=============================================================================\n")
+        print('=' * 76 + '\n')
 
     ##### PROJECT-VIEW FUNCTIONS #####
 
@@ -653,12 +654,12 @@ code       cycles   duration"""
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        Plates().check() # Make this the default.
+        Plates().check()  # Make this the default.
     else:
         all_racks = find_all_racks()
         arg1 = sys.argv[1]
-        if arg1 in all_racks: # If the first argument designates 
-            plates_file = "{}.json".format(arg1) # one of the plates
+        if arg1 in all_racks:  # If the first argument designates
+            plates_file = f'{arg1}.json' # one of the plates
             del(sys.argv[1]) # peel it off, and use it to override the
             fire.Fire(Plates(plates_file=plates_file)) # default plates file.
         else:
