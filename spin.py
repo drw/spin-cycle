@@ -404,29 +404,31 @@ class Plates(object):
         plates = self.load()
         if code is None:
             print("You have to specify the code of an existing plate to edit.")
-            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            plates_str = ', '.join([p['code'] for p in plates])
+            print(f"Here are the current plates: {plate_str}\n")
             code = prompt_for('Enter the code')
         plate_codes = [p['code'] for p in plates]
         while code not in plate_codes:
             print("There's no plate under that code. Try again.")
-            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            plates_str = ', '.join([p['code'] for p in plates])
+            print(f"Here are the current plates: {plates_str}\n")
             code = prompt_for('Enter the code of the plate you want to edit')
 
         index = plate_codes.index(code)
         p = plates[index]
-        p['description'] = prompt_to_edit_field(p,'Description','description')
-        p['period_in_days'] = float(prompt_to_edit_field(p,'Period in days','period_in_days'))
+        p['description'] = prompt_to_edit_field(p, 'Description', 'description')
+        p['period_in_days'] = float(prompt_to_edit_field(p, 'Period in days', 'period_in_days'))
 
-        base_prompt = "Last spun [YYYY-MM-DD | 'now' | 'None' for never]"
+        base_prompt = 'Last spun [YYYY-MM-DD | "now" | "None" for never]'
         field = 'last_spun'
-        last_spun = prompt_for('{} ({})'.format(base_prompt, p[field]))
+        last_spun = prompt_for(f'{base_prompt} ({p[field]})')
         if last_spun != '':
             if last_spun == 'None':
                 p['last_spun'] = None
             elif last_spun == 'now':
-                p['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
+                p['last_spun'] = datetime.strftime(datetime.now(), '%Y-%m-%dT%H:%M:%S.%f')
             else:
-                p['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
+                p['last_spun'] = datetime.strftime(datetime.strptime(last_spun, '%Y-%m-%d'), '%Y-%m-%dT%H:%M:%S.%f')
         # plates has now been updated since p points to the corresponding element in plates.
 
         # [ ] What about editing the spin history?
@@ -444,15 +446,15 @@ class Plates(object):
             partial_matches = [c for c in plate_codes if re.match(str(code),c) is not None]
             if len(partial_matches) == 1:
                 code = partial_matches[0]
-                print("Spinning {}.".format(code))
+                print("Spinning {code}.")
             elif len(partial_matches) > 1:
                 print(f'Try again with a code that disambiguates the following options: {", ".join(partial_matches)}')
                 return
             else:
-                print("There's no plate under that code. Try \n     > spin add {}".format(code))
+                print(f"There's no plate under that code. Try \n     > spin add {code}")
                 return
         else:
-            print("Spinning {}.".format(code))
+            print(f"Spinning {code}.")
 
         # Find the corresponding plate to spin.
         index = plate_codes.index(code)
@@ -463,7 +465,7 @@ class Plates(object):
         else:
             dt_spun = datetime.now() - timedelta(days=int(days_ago))
 
-        date_spun = datetime.strftime(dt_spun,"%Y-%m-%d")
+        date_spun = datetime.strftime(dt_spun, "%Y-%m-%d")
 
         if 'spin_history' in p:
             # Load spin history from file.
@@ -472,24 +474,24 @@ class Plates(object):
             else:
                 spin_history = p['spin_history']
             if spin_history == [] and p['last_spun'] is not None:
-                last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
-                last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
-                spin_history = [last_spun_string,date_spun]
+                last_spun_dt = datetime.strptime(p['last_spun'], '%Y-%m-%dT%H:%M:%S.%f')
+                last_spun_string = datetime.strftime(last_spun_dt, '%Y-%m-%d')
+                spin_history = [last_spun_string, date_spun]
             else:
                 spin_history.append(date_spun)
             p['spin_history'] = spin_history
         elif p['last_spun'] is not None:
             last_spun_dt = datetime.strptime(p['last_spun'], "%Y-%m-%dT%H:%M:%S.%f")
-            last_spun_string = datetime.strftime(last_spun_dt,"%Y-%m-%d")
-            spin_history = [last_spun_string,date_spun]
+            last_spun_string = datetime.strftime(last_spun_dt, "%Y-%m-%d")
+            spin_history = [last_spun_string, date_spun]
             p['spin_history'] = spin_history
         else:
             p['spin_history'] = [date_spun]
-        p['last_spun'] = datetime.strftime(dt_spun,"%Y-%m-%dT%H:%M:%S.%f")
+        p['last_spun'] = datetime.strftime(dt_spun, "%Y-%m-%dT%H:%M:%S.%f")
 
         self.store(plates)
 
-    def shelve(self,code=None,shelving_mode='Done'):
+    def shelve(self, code=None, shelving_mode='Done'):
         # shelving_mode allows for a plate to be paused, but
         # this is not being taken into account in its spin stats
         # calculations yet.
@@ -498,7 +500,7 @@ class Plates(object):
             code = prompt_for('Code')
         plate_codes = [p['code'] for p in plates]
         if code not in plate_codes:
-            print("There's no plate under that code. Try \n     > spin add {}".format(code))
+            print(f"There's no plate under that code. Try \n     > spin add {code}.")
             return
 
         # Find the corresponding plate to spin.
@@ -509,7 +511,7 @@ class Plates(object):
 
         previous_status = str(p['status']) if 'status' in p else 'Active'
         if shelving_mode == previous_status:
-            print('The plate ("{}") is already shelved with status {}.'.format(p['code'],previous_status))
+            print(f'The plate ("{p['code']}") is already shelved with status {previous_status}.')
             return
 
         if shelving_mode == 'Paused':
@@ -556,20 +558,19 @@ class Plates(object):
             fmt = template.format("{:9}")
             if 'spin_history' in p:
                 if p['spin_history'] is not None:
-                    spin_history = p['spin_history'] # A list of date_strings
+                    spin_history = p['spin_history']  # A list of date_strings
                 else:
                     spin_history = []
                 total_spins = len(spin_history)
                 n = 2
                 span = timedelta(n*p['period_in_days'])
-                in_last_n_cycles = spins_in_span(spin_history,span)
+                in_last_n_cycles = spins_in_span(spin_history, span)
                 if total_spins > 0:
-                    first_datetime = datetime.strptime(spin_history[0],'%Y-%m-%d')
-                    last_datetime = datetime.strptime(spin_history[-1],'%Y-%m-%d')
-                    if total_spins in [0,1]:
+                    first_datetime = datetime.strptime(spin_history[0], '%Y-%m-%d')
+                    last_datetime = datetime.strptime(spin_history[-1], '%Y-%m-%d')
+                    if total_spins in [0, 1]:
                         effective_period = "None"
                     else:
-                        #effective_period = (last_datetime-first_datetime).days/(total_spins-1.0)
                         effective_period = (datetime.now() - first_datetime).days/(total_spins - 1.0)
                         fmt = template.format("{:>9.1f}")
                 plate = {'status': p.get('status', 'Active'),
@@ -597,16 +598,17 @@ class Plates(object):
     def projects(self, full=False):
         """Show a project view (rather than a communications-oriented spin view)
         by using a bar chart, the first spin date, the current date, and whether
-        the project is still active."""
+        the project is still active.
+        """
         ps = self.load()
         ender = {'Active': '>', 'Done': ']', 'Paused': '"'}
         scorer = {'Active': 0, 'Paused': 1, 'Done': 2}
         bars = []
         index = []
         scores = {}
-        for k,project in enumerate(ps):
+        for k, project in enumerate(ps):
             if 'spin_history' in project and len(project['spin_history']) > 0:
-                start = project['spin_history'][0] # e.g., "2018-02-02"
+                start = project['spin_history'][0]  # e.g., "2018-02-02"
                 start_dt = datetime.strptime(start, "%Y-%m-%d")
                 if 'status' not in project:
                     status = 'Active'
@@ -615,28 +617,28 @@ class Plates(object):
                 if status in ['Active']:
                     end_dt = datetime.now()
                 else:
-                    end = project['spin_history'][-1] # e.g., "2018-10-10"
-                    end_dt = datetime.strptime(end, "%Y-%m-%d")
+                    end = project['spin_history'][-1]  # e.g., "2018-10-10"
+                    end_dt = datetime.strptime(end, '%Y-%m-%d')
                 if full and status == 'Paused':
-                    end_dt = datetime.now() # This forces even paused projects to print
-                    # full bar charts.
+                    end_dt = datetime.now()
+                    # This forces even paused projects to print full bar charts.
 
                 # [ ] Once a paused project is unpaused, it will make sense to
                 # exclude the paused weeks from the non-full bar chart.
                 terminator = ender[status]
                 score = scorer[status]
-                bar = form_bar(project,start_dt,end_dt,terminator)
+                bar = form_bar(project, start_dt, end_dt, terminator)
                 bars.append(bar)
                 index.append(k)
                 scores[bar] = score
 
-        sorted_bars = sorted(bars,key = lambda b: scores[b])
+        sorted_bars = sorted(bars, key = lambda b: scores[b])
 
         header = """           spins in
            last 2   project
 code       cycles   duration"""
         print(header)
-        for k,bar in zip(index,sorted_bars):
+        for k, bar in zip(index, sorted_bars):
             print(bar)
 
         return sorted_bars, header
@@ -646,7 +648,7 @@ code       cycles   duration"""
         self.projects(full)
 
     def p_watch(self):
-        bars, header = self.projects()
+        bars, _header = self.projects()
         msg = '\n'.join(bars)
         send_to_slack(msg,username='Captain Projecto',channel='@david',icon=':film_projector:')
 
