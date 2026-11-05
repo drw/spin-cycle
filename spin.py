@@ -161,12 +161,12 @@ def inspect(plates: list[dict]) -> list[dict]:
         plate['angular_momentum'] = calculate_angular_momentum(plate)
         plate['streak'] = calculate_streak(plate)
         plate['average_spins'] = calculate_spins_per_cycle(plate)
-        plate['spins_by_cycle'] = spins_by_cycle(plate['spin_history'], timedelta(days = 30*plate['period_in_days']), plate['period_in_days'])
+        plate['spins_by_cycle'] = spins_by_cycle(plate['spin_history'], timedelta(days = 30 * plate['period_in_days']), plate['period_in_days'])
         if is_spinning(plate):
             period_in_days = timedelta(days = plate['period_in_days'])
             last_spun = last_spun_dt(plate)
             if last_spun is None or last_spun + period_in_days < datetime.now():
-                print("{} is overdue.".format(plate["code"]))
+                print(f'{plate["code"]} is overdue.')
                 wobbler = dict(plate)
                 wobbler['last_spun_dt'] = last_spun
                 if last_spun is None:
@@ -177,18 +177,19 @@ def inspect(plates: list[dict]) -> list[dict]:
                 wobbly_plates.append(wobbler)
     return wobbly_plates
 
-def intersection(start1,end1,start2,end2):
-    start = max(start1,start2)
-    end = min(end1,end2)
+def intersection(start1, end1, start2, end2):
+    start = max(start1, start2)
+    end = min(end1, end2)
     diff = end - start
     if diff < timedelta(days = 0):
         diff = timedelta(days = 0)
     return diff
 
-def is_more_in(start,span,ranges):
-    """Determine whether a given time span (from start to start+span)
+def is_more_in(start, span, ranges):
+    """Determine whether a given time span (from start to start + span)
     is more in the periods represented by ranges (where ranges
-    has the form [(begin1,end1),(begin2,end2),...(beginN,None)]."""
+    has the form [(begin1, end1), (begin2, end2),...(beginN, None)].
+    """
 
     cumulative = timedelta(days=0)
 
@@ -198,34 +199,34 @@ def is_more_in(start,span,ranges):
 
     for r in ranges:
 
-        r_start_dt = datetime.strptime(r[0],"%Y-%m-%d")
+        r_start_dt = datetime.strptime(r[0], '%Y-%m-%d')
         if r[1] is None:
             r_end_dt = datetime.now()
         else:
-            r_end_dt = datetime.strptime(r[1],"%Y-%m-%d")
-        cumulative += intersection(start,end,r_start_dt,r_end_dt)
+            r_end_dt = datetime.strptime(r[1], '%Y-%m-%d')
+        cumulative += intersection(start, end, r_start_dt, r_end_dt)
     return cumulative + cumulative > end - start
 
-def spins_in_span(spin_history,span):
+def spins_in_span(spin_history, span):
     now = datetime.now()
     start = now - span
-    in_span = [s for s in spin_history if start <= datetime.strptime(s,"%Y-%m-%d") <= now]
+    in_span = [s for s in spin_history if start <= datetime.strptime(s, '%Y-%m-%d') <= now]
     return len(in_span)
 
-def spins_by_cycle(spin_history,span,cycle_length):
+def spins_by_cycle(spin_history, span, cycle_length):
     now = datetime.now()
     cycle_end = now
     cycle_start = cycle_end - timedelta(days=cycle_length)
     spins = []
     while cycle_start > now - span:
-        in_cycle = [s for s in spin_history if cycle_start <= datetime.strptime(s,"%Y-%m-%d") <= cycle_end] # This is
-        # NOT an efficient way of dividing the spins among the spin bins.
+        in_cycle = [s for s in spin_history if cycle_start <= datetime.strptime(s, '%Y-%m-%d') <= cycle_end]
+        # This is NOT an efficient way of dividing the spins among the spin bins.
         spins = [len(in_cycle)] + spins
         cycle_end = cycle_start + timedelta(days=0)
         cycle_start = cycle_end - timedelta(days=cycle_length)
     return spins
 
-def form_bar(p,start_dt,end_dt,terminator):
+def form_bar(p, start_dt, end_dt, terminator):
     unit = timedelta(days = 7)
     fmt = "{:<11.11} {:>3}  {:>3} {:<}{}"
     duration = int((end_dt - start_dt).days/7.0) # in weeks
@@ -235,7 +236,7 @@ def form_bar(p,start_dt,end_dt,terminator):
     d = start_dt
     d_bar = ''
     while d < end_dt:
-        if is_more_in(d,unit,pauses):
+        if is_more_in(d, unit, pauses):
             d_bar += '"'
         else:
             d_bar += '|'
@@ -244,12 +245,12 @@ def form_bar(p,start_dt,end_dt,terminator):
     if len(d_bar) > 0:
         d_bar = d_bar[:-1]
     n = 2
-    span = timedelta(n*p['period_in_days'])
+    span = timedelta(n * p['period_in_days'])
     if p['spin_history'] is not None:
         spin_history = p['spin_history'] # A list of date_strings
     else:
         spin_history = []
-    in_last_n_cycles = spins_in_span(spin_history,span)
+    in_last_n_cycles = spins_in_span(spin_history, span)
 
     bar = fmt.format(p['code'], in_last_n_cycles, duration, d_bar, terminator)
     return bar
@@ -301,7 +302,7 @@ class Plates(object):
         with open(self._filepath,'w') as f:
             f.write(dumps(plates, indent=4))
 
-    def check(self,show_all=False):
+    def check(self, show_all=False):
         plates = self.load()
         wobbly_plates = inspect(plates)
         if show_all:
@@ -327,7 +328,7 @@ class Plates(object):
         print_table(wobbly_ps_by_recency)
 
 
-        coda = "Out of {} plates, {} need{} to be spun.".format(len(plates), len(wobbly_plates), "s" if len(wobbly_plates) == 1 else "")
+        coda = f'Out of {len(plates)} plates, {len(wobbly_plates)} need{"s" if len(wobbly_plates) == 1 else ""} to be spun.'
         print(textwrap.fill(coda,70))
 
     def all(self):
@@ -352,19 +353,20 @@ class Plates(object):
         pprint(totals_by)
 
     def total_by_year(self):
-        aggregate_by = 'year'
         self.total(aggregate_by = 'year')
 
-    def view(self,code=None):
+    def view(self, code=None):
         plates = self.load()
         if code is None:
             print("You have to specify the code of an existing plate to view.")
-            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            plates_str = ', '.join([p['code'] for p in plates])
+            print(f"Here are the current plates: {plates_str}\n")
             code = prompt_for('Enter the code')
         plate_codes = [p['code'] for p in plates]
         while code not in plate_codes:
             print("There's no plate under that code. Try again.")
-            print("Here are the current plates: {}\n".format(', '.join([p['code'] for p in plates])))
+            plates_str = ', '.join([p['code'] for p in plates])
+            print(f"Here are the current plates: {plates_str}\n")
             code = prompt_for('Enter the code of the plate you want to edit')
 
         index = plate_codes.index(code)
@@ -397,7 +399,7 @@ class Plates(object):
 
         plates.append(d)
         self.store(plates)
-        print('"{}" was added to the plates being tracked.'.format(d['description']))
+        print(f'"{d['description']}" was added to the plates being tracked.')
         self.check()
 
     def edit(self,code=None):
@@ -433,20 +435,20 @@ class Plates(object):
 
         # [ ] What about editing the spin history?
         self.store(plates)
-        print('"{}" has been edited.'.format(p['description']))
+        print(f'"{p['description']}" has been edited.')
         self.check()
 
-    def spin(self,code=None,days_ago=None):
+    def spin(self, code=None, days_ago=None):
         plates = self.load()
         if code is None:
             code = prompt_for('Code')
         plate_codes = [p['code'] for p in plates]
         if code not in plate_codes:
             # Try matching by partial substring
-            partial_matches = [c for c in plate_codes if re.match(str(code),c) is not None]
+            partial_matches = [c for c in plate_codes if re.match(str(code), c) is not None]
             if len(partial_matches) == 1:
                 code = partial_matches[0]
-                print("Spinning {code}.")
+                print(f"Spinning {code}.")
             elif len(partial_matches) > 1:
                 print(f'Try again with a code that disambiguates the following options: {", ".join(partial_matches)}')
                 return
@@ -454,7 +456,7 @@ class Plates(object):
                 print(f"There's no plate under that code. Try \n     > spin add {code}")
                 return
         else:
-            print(f"Spinning {code}.")
+            print(f'Spinning {code}.')
 
         # Find the corresponding plate to spin.
         index = plate_codes.index(code)
