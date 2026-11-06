@@ -108,7 +108,7 @@ def character(count: int) -> str:
 def serialize_spin_counts(spins: list[int]) -> str:
     return ''.join([character(count) for count in spins])
 
-def print_table(ps):
+def print_table(ps: list[dict]):
     template = "{{:<11.11}}  {{:<30.30}}  {}  {{:<10.10}}  {} {{:>6}} {} {{:>6}} {} {{}}"
     fmt = template.format("{:>7.8}","{:<6}","{:<3}", "{:>5}") # Formatting for headers for float columns
     print(fmt.format("", "", "Cycles", "", "Period", "", "", "", "Per", ""))
@@ -177,7 +177,7 @@ def inspect(plates: list[dict]) -> list[dict]:
                 wobbly_plates.append(wobbler)
     return wobbly_plates
 
-def intersection(start1, end1, start2, end2):
+def intersection(start1: datetime, end1: datetime, start2: datetime, end2: datetime) -> timedelta:
     start = max(start1, start2)
     end = min(end1, end2)
     diff = end - start
@@ -185,7 +185,7 @@ def intersection(start1, end1, start2, end2):
         diff = timedelta(days = 0)
     return diff
 
-def is_more_in(start, span, ranges):
+def is_more_in(start: datetime, span: timedelta, ranges: list) -> bool:
     """Determine whether a given time span (from start to start + span)
     is more in the periods represented by ranges (where ranges
     has the form [(begin1, end1), (begin2, end2),...(beginN, None)].
@@ -207,13 +207,13 @@ def is_more_in(start, span, ranges):
         cumulative += intersection(start, end, r_start_dt, r_end_dt)
     return cumulative + cumulative > end - start
 
-def spins_in_span(spin_history, span):
+def spins_in_span(spin_history: list[str], span: timedelta) -> int:
     now = datetime.now()
     start = now - span
     in_span = [s for s in spin_history if start <= datetime.strptime(s, '%Y-%m-%d') <= now]
     return len(in_span)
 
-def spins_by_cycle(spin_history, span, cycle_length):
+def spins_by_cycle(spin_history: list[str], span: timedelta, cycle_length: int) -> list[int]:
     now = datetime.now()
     cycle_end = now
     cycle_start = cycle_end - timedelta(days=cycle_length)
@@ -226,7 +226,7 @@ def spins_by_cycle(spin_history, span, cycle_length):
         cycle_start = cycle_end - timedelta(days=cycle_length)
     return spins
 
-def form_bar(p, start_dt, end_dt, terminator):
+def form_bar(p: dict, start_dt: datetime, end_dt: datetime, terminator: str) -> str:
     unit = timedelta(days = 7)
     fmt = "{:<11.11} {:>3}  {:>3} {:<}{}"
     duration = int((end_dt - start_dt).days/7.0) # in weeks
@@ -255,7 +255,7 @@ def form_bar(p, start_dt, end_dt, terminator):
     bar = fmt.format(p['code'], in_last_n_cycles, duration, d_bar, terminator)
     return bar
 
-def load_pauses(p):
+def load_pauses(p: dict) -> list:
     if 'pauses' in p:
         pauses = p['pauses'] # A list of 2-element lists, with the first element being the
         # beginning of the pause and the second being the end of the pause (equal to None) if
@@ -264,7 +264,7 @@ def load_pauses(p):
         pauses = []
     return pauses
 
-def prompt_for(input_field):
+def prompt_for(input_field: str) -> str:
     try:
         text = raw_input(input_field+": ")  # Python 2
     except:
