@@ -132,12 +132,6 @@ def print_table(ps: list[dict]):
             serialize_spin_counts(p['spins_by_cycle'])))
     print("======================================================================================================================================\n")
 
-#plates = {"trash": {"period_in_days": 3, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, "pi": {"period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } }
-#plates = [{"code": "trash", "period_in_days": 7, "last_spun": "2017-10-22T22:40:06.500726", "description": "Put out the trash." }, {"code": "pi", "period_in_days": 60, "last_spun": "2016-10-22T22:40:06.500726", "description": "Make cool thing for Raspberry Pi." } ]
-#pprint(plates)
-#with open(PATH+"/plates.json",'w') as f:
-#    f.write(dumps(plates, indent=4))
-
 def find_all_racks() -> list[str]:
     from os import listdir
     from os.path import isfile, join
@@ -266,9 +260,9 @@ def load_pauses(p: dict) -> list:
 
 def prompt_for(input_field: str) -> str:
     try:
-        text = raw_input(input_field+": ")  # Python 2
+        text = raw_input(input_field + ': ')  # Python 2
     except:
-        text = input(input_field+": ")  # Python 3
+        text = input(input_field + ': ')  # Python 3
     return text
 
 def prompt_to_edit_field(d, base_prompt, field):
@@ -280,16 +274,16 @@ def prompt_to_edit_field(d, base_prompt, field):
 
 class Plates(object):
     """A collection of plates/projects, with all the functions that one might want to call
-    from the command line through fire as part of the Plates object."""
+    from the command line through fire as part of the Plates object.
+    """
 
     def __init__(self, plates_file=PLATES_FILE):
-        self._filepath = PATH+"/"+plates_file
+        self._filepath = f'{PATH}/{plates_file}'
 
     def __str__(self):
         return self._filepath
 
     def load(self):
-        #plates_filepath = PATH+"/"+PLATES_FILE
         plates_filepath = self._filepath
         if os.path.exists(plates_filepath):
             with open(plates_filepath,'r') as f:
@@ -298,8 +292,8 @@ class Plates(object):
         else:
             return []
 
-    def store(self,plates):
-        with open(self._filepath,'w') as f:
+    def store(self, plates):
+        with open(self._filepath, 'w') as f:
             f.write(dumps(plates, indent=4))
 
     def check(self, show_all=False):
@@ -373,27 +367,27 @@ class Plates(object):
         p = plates[index]
         pprint(p)
 
-    def add(self,code=None):
+    def add(self, code=None):
         plates = self.load()
         d = {'code': code}
         if code is None:
             d['code'] = str(prompt_for('Code'))
         if d['code'] in [p['code'] for p in plates]:
-            print("There's already a plate under that code. Try \n     > spin edit {}".format(d['code']))
+            print(f"There's already a plate under that code. Try \n     > spin edit {d['code']}")
             return
 
         d['description'] = prompt_for('Description')
         d['period_in_days'] = float(prompt_for('Period in days'))
-        last_spun = prompt_for("Last spun [YYYY-MM-DD | Enter for now | 'None' for never]")
+        last_spun = prompt_for('Last spun [YYYY-MM-DD | Enter for now | "None" for never]')
         if last_spun == 'None':
             d['last_spun'] = None
             d['spin_history'] = []
         elif last_spun == '':
-            d['last_spun'] = datetime.strftime(datetime.now(),"%Y-%m-%dT%H:%M:%S.%f")
-            d['spin_history'] = [datetime.strftime(datetime.now(),"%Y-%m-%d")]
+            d['last_spun'] = datetime.strftime(datetime.now(), '%Y-%m-%dT%H:%M:%S.%f')
+            d['spin_history'] = [datetime.strftime(datetime.now(), '%Y-%m-%d')]
         else:
-            d['last_spun'] = datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%dT%H:%M:%S.%f")
-            d['spin_history'] = [datetime.strftime(datetime.strptime(last_spun,"%Y-%m-%d"), "%Y-%m-%d")]
+            d['last_spun'] = datetime.strftime(datetime.strptime(last_spun, '%Y-%m-%d'), '%Y-%m-%dT%H:%M:%S.%f')
+            d['spin_history'] = [datetime.strftime(datetime.strptime(last_spun, '%Y-%m-%d'), '%Y-%m-%d')]
             # The above line seems like it does something and then undoes it, but really it's
             # validating that the entered date is in the right format.
 
@@ -402,12 +396,12 @@ class Plates(object):
         print(f'"{d['description']}" was added to the plates being tracked.')
         self.check()
 
-    def edit(self,code=None):
+    def edit(self, code=None):
         plates = self.load()
         if code is None:
             print("You have to specify the code of an existing plate to edit.")
             plates_str = ', '.join([p['code'] for p in plates])
-            print(f"Here are the current plates: {plate_str}\n")
+            print(f"Here are the current plates: {plates_str}\n")
             code = prompt_for('Enter the code')
         plate_codes = [p['code'] for p in plates]
         while code not in plate_codes:
