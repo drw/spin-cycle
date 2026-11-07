@@ -120,10 +120,10 @@ def print_table(ps: list[dict]):
         if 'last_spun_dt' not in p or p['last_spun_dt'] is None:
             last_spun_date = ''
         else:
-            last_spun_date = datetime.strftime(p['last_spun_dt'],"%Y-%m-%d")
+            last_spun_date = datetime.strftime(p['last_spun_dt'], '%Y-%m-%d')
         if 'status' not in p or p['status'] is None:
             p['status'] = 'Active'
-        print(fmt.format(p['code'],p['description'],
+        print(fmt.format(p['code'], p['description'],
             p['cycles_late'], last_spun_date,
             p['period_in_days'],p['status'],
             p['angular_momentum'],
@@ -137,7 +137,7 @@ def find_all_racks() -> list[str]:
     from os.path import isfile, join
     import re
     onlyfiles = [f for f in listdir(PATH) if isfile(join(PATH, f))]
-    return [re.sub(r"\.json", "", f) for f in onlyfiles if re.search(r"json$", f)]
+    return [re.sub(r'\.json', '', f) for f in onlyfiles if re.search(r'json$', f)]
 
 def is_spinning(plate: dict) -> bool:
     return 'status' not in plate or plate['status'] == 'Active'
@@ -146,7 +146,7 @@ def last_spun_dt(plate: dict) -> datetime.date:
     if plate['last_spun'] is None:
         last_spun = None
     else:
-        last_spun = datetime.strptime(plate['last_spun'],"%Y-%m-%dT%H:%M:%S.%f")
+        last_spun = datetime.strptime(plate['last_spun'], '%Y-%m-%dT%H:%M:%S.%f')
     return last_spun
 
 def inspect(plates: list[dict]) -> list[dict]:
@@ -263,7 +263,7 @@ def prompt_for(input_field: str) -> str:
     return text
 
 def prompt_to_edit_field(d, base_prompt, field):
-    new_value = prompt_for('{} ({})'.format(base_prompt, d[field]))
+    new_value = prompt_for('{base_prompt} ({d[field]})')
     if new_value == '':
         return d[field]
     else:
@@ -525,12 +525,14 @@ class Plates(object):
 
         p['status'] = shelving_mode
         self.store(plates)
-        print(f'Put the {p['code']} plate ("{p['description']}") on the shelf with mode {shelving_mode}.')
+        desc = p['description']
+        p_code = p['code']
+        print(f'Put the {p_code} plate ("{desc}") on the shelf with mode {shelving_mode}.')
 
-    def pause(self,code=None):
+    def pause(self, code=None):
         self.shelve(code, shelving_mode='Paused')
 
-    def unpause(self,code=None):
+    def unpause(self, code=None):
         self.shelve(code, shelving_mode='Active')
 
     def done(self, code=None):
@@ -538,17 +540,17 @@ class Plates(object):
 
     def stats(self):
         unsorted_plates = self.load()
-        template = "{{:<11.11}}  {{:<35.35}} {{:<8}}  {}  {{:<7}} {{:<6}}"
-        fmt = template.format("{:>9.9}")
-        print(fmt.format("", "", "Total", "Effective", "Period", ""))
-        print(fmt.format("Code","Description","spins", "period","in days", "Status"))
+        template = '{{:<11.11}}  {{:<35.35}} {{:<8}}  {}  {{:<7}} {{:<6}}'
+        fmt = template.format('{:>9.9}')
+        print(fmt.format('', '', 'Total', 'Effective', 'Period', ''))
+        print(fmt.format('Code', 'Description', 'spins', 'period', 'in days', 'Status'))
         print('=' * 76)
         plates = []
         for p in unsorted_plates:
             total_spins = 0
             in_last_n_cycles = 0
             effective_period = ''
-            fmt = template.format("{:9}")
+            fmt = template.format('{:9}')
             if 'spin_history' in p:
                 if p['spin_history'] is not None:
                     spin_history = p['spin_history']  # A list of date_strings
@@ -562,10 +564,10 @@ class Plates(object):
                     first_datetime = datetime.strptime(spin_history[0], '%Y-%m-%d')
                     last_datetime = datetime.strptime(spin_history[-1], '%Y-%m-%d')
                     if total_spins in [0, 1]:
-                        effective_period = "None"
+                        effective_period = 'None'
                     else:
                         effective_period = (datetime.now() - first_datetime).days/(total_spins - 1.0)
-                        fmt = template.format("{:>9.1f}")
+                        fmt = template.format('{:>9.1f}')
                 plate = {'status': p.get('status', 'Active'),
                         'fmt': fmt,
                         'code': p['code'],
@@ -601,8 +603,8 @@ class Plates(object):
         scores = {}
         for k, project in enumerate(ps):
             if 'spin_history' in project and len(project['spin_history']) > 0:
-                start = project['spin_history'][0]  # e.g., "2018-02-02"
-                start_dt = datetime.strptime(start, "%Y-%m-%d")
+                start = project['spin_history'][0]  # e.g., '2018-02-02'
+                start_dt = datetime.strptime(start, '%Y-%m-%d')
                 if 'status' not in project:
                     status = 'Active'
                 else:
@@ -610,7 +612,7 @@ class Plates(object):
                 if status in ['Active']:
                     end_dt = datetime.now()
                 else:
-                    end = project['spin_history'][-1]  # e.g., "2018-10-10"
+                    end = project['spin_history'][-1]  # e.g., '2018-10-10'
                     end_dt = datetime.strptime(end, '%Y-%m-%d')
                 if full and status == 'Paused':
                     end_dt = datetime.now()
@@ -643,7 +645,7 @@ code       cycles   duration"""
     def p_watch(self):
         bars, _header = self.projects()
         msg = '\n'.join(bars)
-        send_to_slack(msg,username='Captain Projecto',channel='@david',icon=':film_projector:')
+        send_to_slack(msg, username='Captain Projecto', channel='@david', icon=':film_projector:')
 
     ##### END PROJECT-VIEW FUNCTIONS #####
 
@@ -653,9 +655,11 @@ if __name__ == '__main__':
     else:
         all_racks = find_all_racks()
         arg1 = sys.argv[1]
-        if arg1 in all_racks:  # If the first argument designates
-            plates_file = f'{arg1}.json' # one of the plates
-            del(sys.argv[1]) # peel it off, and use it to override the
-            fire.Fire(Plates(plates_file=plates_file)) # default plates file.
+        if arg1 in all_racks:
+            # If the first argument designates one of the plates
+            # peel it off, and use it to override the default plates file.
+            plates_file = f'{arg1}.json'
+            del(sys.argv[1])
+            fire.Fire(Plates(plates_file = plates_file))
         else:
             fire.Fire(Plates())
