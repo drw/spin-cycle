@@ -259,10 +259,7 @@ def load_pauses(p: dict) -> list:
     return pauses
 
 def prompt_for(input_field: str) -> str:
-    try:
-        text = raw_input(input_field + ': ')  # Python 2
-    except:
-        text = input(input_field + ': ')  # Python 3
+    text = input(input_field + ': ')
     return text
 
 def prompt_to_edit_field(d, base_prompt, field):
