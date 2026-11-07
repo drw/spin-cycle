@@ -39,7 +39,8 @@ def module_path(local_function):
    defined locally in the module. - from
    http://stackoverflow.com/questions/729583/getting-file-path-of-imported-module
    """
-   import inspect, os
+   import inspect
+   import os
    return os.path.abspath(inspect.getsourcefile(local_function))
 
 try:
@@ -133,9 +134,9 @@ def print_table(ps: list[dict]):
     print("======================================================================================================================================\n")
 
 def find_all_racks() -> list[str]:
+    import re
     from os import listdir
     from os.path import isfile, join
-    import re
     onlyfiles = [f for f in listdir(PATH) if isfile(join(PATH, f))]
     return [re.sub(r'\.json', '', f) for f in onlyfiles if re.search(r'json$', f)]
 
