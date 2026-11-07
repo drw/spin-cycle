@@ -50,9 +50,8 @@ except ModuleNotFoundError:
 
 def coerce_nulls_to_blanks(wobbly_plates: list[dict], field: str) -> None:
     for plate in wobbly_plates:
-        if field in plate:
-            if plate[field] is None:
-                plate[field] = ''
+        if field in plate and plate[field] is None:
+            plate[field] = ''
 
 def calculate_angular_momentum(p: dict) -> float:
     spins = p['spin_history']
@@ -89,9 +88,7 @@ def calculate_spins_per_cycle(p: dict) -> float:
     end = datetime.now().date()
     total_days = end - parser.parse(first_date).date()
     period = p['period_in_days']
-    cycles = total_days.days/period
-    if cycles < 1:
-        cycles = 1
+    cycles = max(total_days.days/period, 1)
     return len(spins)/cycles
 
 def character(count: int) -> str:
@@ -175,9 +172,7 @@ def inspect(plates: list[dict]) -> list[dict]:
 def intersection(start1: datetime, end1: datetime, start2: datetime, end2: datetime) -> timedelta:
     start = max(start1, start2)
     end = min(end1, end2)
-    diff = end - start
-    if diff < timedelta(days = 0):
-        diff = timedelta(days = 0)
+    diff = max(end - start, timedelta(days = 0))
     return diff
 
 def is_more_in(start: datetime, span: timedelta, ranges: list) -> bool:
