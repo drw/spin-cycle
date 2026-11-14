@@ -183,12 +183,9 @@ def is_more_in(start: datetime, span: timedelta, ranges: list) -> bool:
 
     cumulative = timedelta(days=0)
 
-    end = start + span
-    if end > datetime.now():
-        end = datetime.now()
+    end = min(start + span, datetime.now())
 
     for r in ranges:
-
         r_start_dt = datetime.strptime(r[0], '%Y-%m-%d')
         if r[1] is None:
             r_end_dt = datetime.now()
@@ -246,13 +243,11 @@ def form_bar(p: dict, start_dt: datetime, end_dt: datetime, terminator: str) -> 
     return bar
 
 def load_pauses(p: dict) -> list:
-    if 'pauses' in p:
-        pauses = p['pauses'] # A list of 2-element lists, with the first element being the
-        # beginning of the pause and the second being the end of the pause (equal to None) if
-        # the pause is ongoing.
-    else:
-        pauses = []
-    return pauses
+    """Load the pauses from the plate `p`. Here, pauses are stored as a list of
+    2-element lists, with the first element being the beginning of the pause and
+    the second being the end of the pause (equal to None) if the pause is ongoing.
+    """
+    return p.get('pauses', [])
 
 def prompt_for(input_field: str) -> str:
     text = input(input_field + ': ')
