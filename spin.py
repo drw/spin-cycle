@@ -480,7 +480,7 @@ class Plates(object):
 
         self.store(plates)
 
-    def shelve(self, code=None, shelving_mode='Done'):
+    def shelve(self, code=None, shelving_mode='Done') -> None:
         # shelving_mode allows for a plate to be paused, but
         # this is not being taken into account in its spin stats
         # calculations yet.
@@ -525,16 +525,16 @@ class Plates(object):
         p_code = p['code']
         print(f'Put the {p_code} plate ("{desc}") on the shelf with mode {shelving_mode}.')
 
-    def pause(self, code=None):
+    def pause(self, code=None) -> None:
         self.shelve(code, shelving_mode='Paused')
 
-    def unpause(self, code=None):
+    def unpause(self, code=None) -> None:
         self.shelve(code, shelving_mode='Active')
 
-    def done(self, code=None):
+    def done(self, code=None) -> None:
         self.shelve(code, shelving_mode='Done')
 
-    def stats(self):
+    def stats(self) -> None:
         unsorted_plates = self.load()
         template = '{{:<11.11}}  {{:<35.35}} {{:<8}}  {}  {{:<7}} {{:<6}}'
         fmt = template.format('{:>9.9}')
